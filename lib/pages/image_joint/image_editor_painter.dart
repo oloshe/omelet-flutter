@@ -3,10 +3,9 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:omelet/common/media_query.dart';
 
 class ImageEditorPainter extends CustomPainter {
-  ImageEditorController controller;
+  ImageEditorPainterController controller;
 
   ImageEditorPainter({required this.controller}) : super(repaint: controller);
 
@@ -28,7 +27,7 @@ class ImageEditorPainter extends CustomPainter {
   }
 }
 
-class ImageEditorController with ChangeNotifier {
+class ImageEditorPainterController with ChangeNotifier {
   List<ui.Image> images = [];
 
   /// 是否是水平
@@ -135,6 +134,9 @@ class ImageEditorController with ChangeNotifier {
   }
 
   void paint(Canvas canvas, Size size) {
+    if (images.isEmpty) {
+      return;
+    }
     double maxWidth = images.map((e) => e.width).reduce(max).toDouble();
     double maxHeight = images.map((e) => e.height).reduce(max).toDouble();
     double currTop = padding.top;

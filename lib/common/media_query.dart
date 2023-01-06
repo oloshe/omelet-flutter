@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+part of './index.dart';
 
 class ScreenAdaptor extends StatefulWidget with WidgetsBindingObserver {
   /// 设计分辨率750*1334
