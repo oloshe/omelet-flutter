@@ -54,7 +54,7 @@ class Cell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final titleTextStyle = R.black | R.s14;
+    final titleTextStyle = Ts.black | Ts.s14;
     final padding_ = padding ??
         const EdgeInsets.symmetric(
           horizontal: 20,
@@ -66,7 +66,7 @@ class Cell extends StatelessWidget {
         children: [
           if (leading != null)
             DefaultTextStyle(
-              style: R.s14 | R.black,
+              style: Ts.s14 | Ts.black,
               child: leading!,
             ),
           if (leading != null) const SizedBox(width: 10),

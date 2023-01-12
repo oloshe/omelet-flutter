@@ -3,9 +3,11 @@ part of './index.dart';
 /// 方便设置文字颜色和大小
 /// Text("字符串", style: R.sc(20, Colors.white));
 /// Text("字符串", style: R.sc(20, Colors.white) | TextStyle(height: 2);
-class R {
-  R._();
+class Ts {
+  Ts._();
 
+  static const TextStyle s8 = TextStyle(fontSize: 8);
+  static const TextStyle s9 = TextStyle(fontSize: 9);
   static const TextStyle s10 = TextStyle(fontSize: 10);
   static const TextStyle s11 = TextStyle(fontSize: 11);
   static const TextStyle s12 = TextStyle(fontSize: 12);
@@ -82,7 +84,7 @@ class R {
 
 extension TextStyleExt on TextStyle {
   /// 方便合并 TextStyle
-  /// [R.s26] | [R.white]
+  /// [Ts.s26] | [Ts.white]
   /// 等价于
   /// TextStyle(fontSize: 26.rpx).merge(TextStyle(color: Colors.white))
   TextStyle operator |(TextStyle style) => merge(style);

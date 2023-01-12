@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ImageEditorPainter extends CustomPainter {
   ImageEditorPainterController controller;
@@ -22,13 +23,13 @@ class ImageEditorPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return controller.images.length !=
-        (oldDelegate as ImageEditorPainter).controller.images.length;
+    return controller.items.length !=
+        (oldDelegate as ImageEditorPainter).controller.items.length;
   }
 }
 
 class ImageEditorPainterController with ChangeNotifier {
-  List<ui.Image> images = [];
+  List<JointItem> items = [];
 
   /// 是否是水平
   bool isHorizontal = false;
@@ -47,12 +48,12 @@ class ImageEditorPainterController with ChangeNotifier {
 
   /// 宽度
   double getWidth() {
-    if (images.isEmpty) {
+    if (items.isEmpty) {
       return 0;
     }
     if (isHorizontal) {
       final dh = getHeight();
-      final totalWidth = images.map((e) {
+      final totalWidth = items.map((e) {
         final scale = e.height / dh;
         return e.width / scale;
       }).reduce((a, b) => a + b);
@@ -64,14 +65,14 @@ class ImageEditorPainterController with ChangeNotifier {
 
   /// 高度
   double getHeight() {
-    if (images.isEmpty) {
+    if (items.isEmpty) {
       return 0;
     }
     if (isHorizontal) {
       return _maxImgHeight;
     } else {
       final dw = getWidth() - padding.left - padding.right;
-      final totalHeight = images.map((e) {
+      final totalHeight = items.map((e) {
         final scale = e.width / dw;
         return e.height / scale;
       }).reduce((a, b) => a + b);
@@ -80,23 +81,29 @@ class ImageEditorPainterController with ChangeNotifier {
   }
 
   /// 总共的间隙
-  double get totalSpacing => spacing * (images.length - 1);
+  double get totalSpacing => spacing * (items.length - 1);
 
   _updateMaxImgSize() {
-    _maxImgWidth = images.map((e) => e.width).reduce(max).toDouble();
-    _maxImgHeight = images.map((e) => e.height).reduce(max).toDouble();
+    _maxImgWidth = items.map((e) => e.width).reduce(max).toDouble();
+    _maxImgHeight = items.map((e) => e.height).reduce(max).toDouble();
   }
 
   /// 添加一张图片
-  appendImage(ui.Image img) {
-    images.add(img);
+  void appendImage() async {
+    final picker = ImagePicker();
+    final ret = await picker.pickMultiImage();
+    for (var file in ret) {
+      final bytes = await file.readAsBytes();
+      final img = await ImageEditorPainter.loadImage(bytes);
+      items.add(JointItem.image(img, bytes, UniqueKey()));
+    }
     _updateMaxImgSize();
     notifyListeners();
   }
 
   /// 清除所有
   clear() {
-    images.clear();
+    items.clear();
     _updateMaxImgSize();
     notifyListeners();
   }
@@ -134,19 +141,19 @@ class ImageEditorPainterController with ChangeNotifier {
   }
 
   void paint(Canvas canvas, Size size) {
-    if (images.isEmpty) {
+    if (items.isEmpty) {
       return;
     }
-    double maxWidth = images.map((e) => e.width).reduce(max).toDouble();
-    double maxHeight = images.map((e) => e.height).reduce(max).toDouble();
+    double maxWidth = items.map((e) => e.width).reduce(max).toDouble();
+    double maxHeight = items.map((e) => e.height).reduce(max).toDouble();
     double currTop = padding.top;
     double currLeft = padding.left;
     final bgPaint = Paint()..color = bgColor;
     final bgRect = Rect.fromLTWH(0, 0, getWidth(), getHeight());
     canvas.drawRect(bgRect, bgPaint);
-    for (var img in images) {
-      final w = img.width.toDouble();
-      final h = img.height.toDouble();
+    for (var item in items) {
+      final w = item.width.toDouble();
+      final h = item.height.toDouble();
       final Rect src = Rect.fromLTWH(0, 0, w, h);
       late final Rect dest;
       if (isHorizontal) {
@@ -160,7 +167,7 @@ class ImageEditorPainterController with ChangeNotifier {
         dest = Rect.fromLTWH(currLeft, currTop, maxWidth, dh);
         currTop += dh + spacing;
       }
-      canvas.drawImageRect(img, src, dest, Paint());
+      item.drawImageRect(canvas, src, dest, Paint());
     }
   }
 
@@ -175,5 +182,54 @@ class ImageEditorPainterController with ChangeNotifier {
     final img = await pic.toImage(w.toInt(), h.toInt());
     final pngBytes = await img.toByteData(format: ui.ImageByteFormat.png);
     return Uint8List.view(pngBytes!.buffer);
+  }
+
+  void applyReorder(List<JointItem> newList) {
+    assert(items.length == newList.length);
+    items = newList;
+    notifyListeners();
+  }
+}
+
+enum JointType {
+  image,
+}
+
+class JointItem {
+  final JointType type;
+  // image
+  final ui.Image? image;
+  final Uint8List? imageData;
+
+  final Key key;
+  const JointItem.image(ui.Image img, Uint8List data, this.key)
+      : image = img,
+        imageData = data,
+        type = JointType.image;
+
+  int get height {
+    switch(type) {
+      case JointType.image: {
+        return image!.height;
+      }
+    }
+  }
+  int get width {
+    switch(type) {
+      case JointType.image: {
+        return image!.width;
+      }
+    }
+  }
+
+  void drawImageRect(Canvas canvas, Rect src, Rect dest, Paint paint) {
+    if (image != null) {
+      canvas.drawImageRect(image!, src, dest, paint);
+    }
+  }
+
+  @override
+  String toString() {
+    return 'JoinItem($type)';
   }
 }
