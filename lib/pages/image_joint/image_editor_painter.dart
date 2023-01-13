@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ImageEditorPainter extends CustomPainter {
@@ -84,8 +85,13 @@ class ImageEditorPainterController with ChangeNotifier {
   double get totalSpacing => spacing * (items.length - 1);
 
   _updateMaxImgSize() {
-    _maxImgWidth = items.map((e) => e.width).reduce(max).toDouble();
-    _maxImgHeight = items.map((e) => e.height).reduce(max).toDouble();
+    if (items.isEmpty) {
+      _maxImgWidth = 0;
+      _maxImgHeight = 0;
+    } else {
+      _maxImgWidth = items.map((e) => e.width).reduce(max).toDouble();
+      _maxImgHeight = items.map((e) => e.height).reduce(max).toDouble();
+    }
   }
 
   /// 添加一张图片
@@ -106,6 +112,9 @@ class ImageEditorPainterController with ChangeNotifier {
     items.clear();
     _updateMaxImgSize();
     notifyListeners();
+    Fluttertoast.showToast(
+      msg: 'Cleared',
+    );
   }
 
   /// 设置是否水平分布
@@ -185,7 +194,6 @@ class ImageEditorPainterController with ChangeNotifier {
   }
 
   void applyReorder(List<JointItem> newList) {
-    assert(items.length == newList.length);
     items = newList;
     notifyListeners();
   }
@@ -208,17 +216,20 @@ class JointItem {
         type = JointType.image;
 
   int get height {
-    switch(type) {
-      case JointType.image: {
-        return image!.height;
-      }
+    switch (type) {
+      case JointType.image:
+        {
+          return image!.height;
+        }
     }
   }
+
   int get width {
-    switch(type) {
-      case JointType.image: {
-        return image!.width;
-      }
+    switch (type) {
+      case JointType.image:
+        {
+          return image!.width;
+        }
     }
   }
 

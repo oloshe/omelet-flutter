@@ -26,6 +26,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.yellow,
       ),
       debugShowCheckedModeBanner: false,
+      navigatorKey: Utils.navigatorKey,
       home: ScreenAdaptor(
         child: const ImageJointPage(),
       ),

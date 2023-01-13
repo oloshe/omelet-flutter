@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_reorderable_grid_view/entities/order_update_entity.dart';
 import 'package:flutter_reorderable_grid_view/widgets/widgets.dart';
@@ -49,6 +51,7 @@ class _ImageReorderPageState extends State<ImageReorderPage> {
           IconButton(
             onPressed: () {
               widget.controller.applyReorder(items);
+              Utils.toast('Applied');
               Navigator.of(context).pop();
             },
             icon: const Icon(Icons.done, color: Colors.black),
@@ -81,14 +84,108 @@ class _ImageReorderPageState extends State<ImageReorderPage> {
             final item = items.elementAt(index);
             return Container(
               key: item.key,
-              decoration: BoxDecoration(
-                  color: Colors.black45,
-                  borderRadius: BorderRadius.all(Radius.circular(20))),
-              child: Image.memory(item.imageData!),
+              decoration: const BoxDecoration(
+                color: Colors.black45,
+                borderRadius: BorderRadius.all(Radius.circular(20)),
+              ),
+              child: GestureDetector(
+                onTap: () async {
+                  final deleted = await _previewImage(
+                    context,
+                    items.map((e) => item.imageData!).toList(growable: false),
+                    index,
+                  );
+                  if (deleted != null && deleted) {
+                    setState(() {
+                      items.removeAt(index);
+                    });
+                    Utils.toast('Deleted');
+                  }
+                },
+                child: Image.memory(item.imageData!),
+              ),
             );
           }),
         ),
       ),
     );
   }
+}
+
+/// 预览图片，返回是否删除
+Future<bool?> _previewImage(
+  BuildContext context,
+  List<Uint8List> images,
+  int initialIndex,
+) {
+  return showDialog<bool>(
+    context: context,
+    builder: (context) {
+      var index = initialIndex;
+      return Material(
+        child: ColoredBox(
+          color: Colors.black87,
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  child: InteractiveViewer(
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // const Expanded(
+                        //   child: ColoredBox(
+                        //     color: Colors.white,
+                        //     child: SizedBox(
+                        //       width: 500,
+                        //       height: 500,
+                        //     ),
+                        //   ),
+                        // ),
+                        Image.memory(
+                          images[index],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(
+                height: 60,
+                child: ColoredBox(
+                  color: Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          icon:
+                              const Icon(Icons.delete, color: Colors.redAccent),
+                        ),
+                        IconButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          icon: const Icon(Icons.crop, color: Colors.black),
+                        ),
+                        IconButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          icon: const Icon(Icons.close, color: Colors.black),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              )
+            ],
+          ),
+        ),
+      );
+    },
+  );
 }
