@@ -85,8 +85,8 @@ class _ImageReorderPageState extends State<ImageReorderPage> {
             return Container(
               key: item.key,
               decoration: const BoxDecoration(
-                color: Colors.black45,
-                borderRadius: BorderRadius.all(Radius.circular(20)),
+                color: Colors.black87,
+                // borderRadius: BorderRadius.all(Radius.circular(20)),
               ),
               child: GestureDetector(
                 onTap: () async {

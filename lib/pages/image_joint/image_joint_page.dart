@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:omelet/pages/image_joint/image_args_page.dart';
 import 'package:omelet/pages/image_joint/image_editor_painter.dart';
 import 'dart:ui' as ui;
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -63,179 +64,180 @@ class _ImageJointPageState extends State<ImageJointPage> {
         ],
         builder: (context, child) {
           const tabHeight = 80.0;
-          return LayoutBuilder(
-            builder: (context, constraints) {
-              final viewerHeight = constraints.maxHeight - tabHeight;
-              print(constraints);
-              return SizedBox(
-                width: double.infinity,
-                child: Column(
-                  children: <Widget>[
-                    _MainViewer(viewerHeight: viewerHeight, controller: controller),
-                    // Expanded(
-                    //   child: SingleChildScrollView(
-                    //     child: Column(
-                    //       children: [
-                    //         Selector<ImageEditorPainterController, double>(
-                    //           selector: (context, val) => val.spacing,
-                    //           builder: (context, val, child) {
-                    //             return Cell(
-                    //               leading: const Text("Spacing"),
-                    //               title: Row(
-                    //                 children: [
-                    //                   SizedBox(
-                    //                     width: 25,
-                    //                     child: Text(val.toInt().toString()),
-                    //                   ),
-                    //                   Expanded(
-                    //                     child: Slider(
-                    //                       value: val,
-                    //                       min: 0,
-                    //                       max: 200,
-                    //                       onChanged: (val) {
-                    //                         controller.setSpacing(val);
-                    //                       },
-                    //                     ),
-                    //                   )
-                    //                 ],
-                    //               ),
-                    //             );
-                    //           },
-                    //         ),
-                    //         Selector<ImageEditorPainterController, EdgeInsets>(
-                    //           selector: (context, val) => val.padding,
-                    //           builder: (context, val, child) {
-                    //             return Cell(
-                    //               leading: const Text('Padding'),
-                    //               title: Text(
-                    //                 'T ${val.top.toInt().toString()} '
-                    //                 'B ${val.bottom.toInt().toString()} '
-                    //                 'L ${val.left.toInt().toString()} '
-                    //                 'R ${val.right.toInt().toString()}',
-                    //                 style: const TextStyle(
-                    //                   color: Colors.grey,
-                    //                 ),
-                    //               ),
-                    //               trailing:
-                    //                   Selector<ImageJointPageController, bool>(
-                    //                       selector: (_, val) => val.paddingEditing,
-                    //                       builder: (context, show, child) {
-                    //                         if (show) {
-                    //                           return TextButton(
-                    //                             onPressed: () {
-                    //                               state.donePadding();
-                    //                             },
-                    //                             child: const Text("Done"),
-                    //                           );
-                    //                         } else {
-                    //                           return TextButton(
-                    //                             onPressed: () {
-                    //                               state.editPadding();
-                    //                             },
-                    //                             child: const Text("Edit"),
-                    //                           );
-                    //                         }
-                    //                       }),
-                    //             );
-                    //           },
-                    //         ),
-                    //         Selector<ImageJointPageController, bool>(
-                    //           selector: (_, val) => val.paddingEditing,
-                    //           builder: (context, show, child) {
-                    //             if (!show) {
-                    //               return const SizedBox.shrink();
-                    //             }
-                    //             return ColoredBox(
-                    //               color: const Color(0xfff1f1f1),
-                    //               child: Padding(
-                    //                 padding:
-                    //                     const EdgeInsets.symmetric(vertical: 10),
-                    //                 child: Selector<ImageEditorPainterController,
-                    //                     EdgeInsets>(
-                    //                   selector: (_, val) => val.padding,
-                    //                   builder: (context, pad, child) {
-                    //                     return Column(
-                    //                       children: [
-                    //                         _padCell('Top', pad.top, (val) {
-                    //                           controller.setPadding(
-                    //                               pad.copyWith(top: val));
-                    //                         }),
-                    //                         _padCell('Bottom', pad.bottom, (val) {
-                    //                           controller.setPadding(
-                    //                               pad.copyWith(bottom: val));
-                    //                         }),
-                    //                         _padCell('Left', pad.left, (val) {
-                    //                           controller.setPadding(
-                    //                               pad.copyWith(left: val));
-                    //                         }),
-                    //                         _padCell('Right', pad.right, (val) {
-                    //                           controller.setPadding(
-                    //                               pad.copyWith(right: val));
-                    //                         }),
-                    //                       ],
-                    //                     );
-                    //                   },
-                    //                 ),
-                    //               ),
-                    //             );
-                    //           },
-                    //         ),
-                    //       ],
-                    //     ),
-                    //   ),
-                    // ),
-                    SizedBox(
-                      height: tabHeight,
-                      child: ColoredBox(
-                        color: Colors.grey.shade100,
-                        child: Padding(
-                          padding: const EdgeInsets.only(
-                            top: 5,
-                            left: 20,
-                            right: 20,
-                            bottom: 15,
-                          ),
-                          child: SafeArea(
-                            bottom: true,
-                            child: Row(
-                              children: [
-                                _BottomBtn(
-                                  icon: Icons.add,
-                                  text: 'APPEND',
-                                  onPressed: controller.appendImage,
+          return LayoutBuilder(builder: (context, constraints) {
+            final viewerHeight = constraints.maxHeight - tabHeight;
+            print(constraints);
+            return SizedBox(
+              width: double.infinity,
+              child: Column(
+                children: <Widget>[
+                  ImageJointMainViewer(
+                      viewerHeight: viewerHeight, controller: controller),
+                  // Expanded(
+                  //   child: SingleChildScrollView(
+                  //     child: Column(
+                  //       children: [
+                  //         Selector<ImageEditorPainterController, double>(
+                  //           selector: (context, val) => val.spacing,
+                  //           builder: (context, val, child) {
+                  //             return Cell(
+                  //               leading: const Text("Spacing"),
+                  //               title: Row(
+                  //                 children: [
+                  //                   SizedBox(
+                  //                     width: 25,
+                  //                     child: Text(val.toInt().toString()),
+                  //                   ),
+                  //                   Expanded(
+                  //                     child: Slider(
+                  //                       value: val,
+                  //                       min: 0,
+                  //                       max: 200,
+                  //                       onChanged: (val) {
+                  //                         controller.setSpacing(val);
+                  //                       },
+                  //                     ),
+                  //                   )
+                  //                 ],
+                  //               ),
+                  //             );
+                  //           },
+                  //         ),
+                  //         Selector<ImageEditorPainterController, EdgeInsets>(
+                  //           selector: (context, val) => val.padding,
+                  //           builder: (context, val, child) {
+                  //             return Cell(
+                  //               leading: const Text('Padding'),
+                  //               title: Text(
+                  //                 'T ${val.top.toInt().toString()} '
+                  //                 'B ${val.bottom.toInt().toString()} '
+                  //                 'L ${val.left.toInt().toString()} '
+                  //                 'R ${val.right.toInt().toString()}',
+                  //                 style: const TextStyle(
+                  //                   color: Colors.grey,
+                  //                 ),
+                  //               ),
+                  //               trailing:
+                  //                   Selector<ImageJointPageController, bool>(
+                  //                       selector: (_, val) => val.paddingEditing,
+                  //                       builder: (context, show, child) {
+                  //                         if (show) {
+                  //                           return TextButton(
+                  //                             onPressed: () {
+                  //                               state.donePadding();
+                  //                             },
+                  //                             child: const Text("Done"),
+                  //                           );
+                  //                         } else {
+                  //                           return TextButton(
+                  //                             onPressed: () {
+                  //                               state.editPadding();
+                  //                             },
+                  //                             child: const Text("Edit"),
+                  //                           );
+                  //                         }
+                  //                       }),
+                  //             );
+                  //           },
+                  //         ),
+                  //         Selector<ImageJointPageController, bool>(
+                  //           selector: (_, val) => val.paddingEditing,
+                  //           builder: (context, show, child) {
+                  //             if (!show) {
+                  //               return const SizedBox.shrink();
+                  //             }
+                  //             return ColoredBox(
+                  //               color: const Color(0xfff1f1f1),
+                  //               child: Padding(
+                  //                 padding:
+                  //                     const EdgeInsets.symmetric(vertical: 10),
+                  //                 child: Selector<ImageEditorPainterController,
+                  //                     EdgeInsets>(
+                  //                   selector: (_, val) => val.padding,
+                  //                   builder: (context, pad, child) {
+                  //                     return Column(
+                  //                       children: [
+                  //                         _padCell('Top', pad.top, (val) {
+                  //                           controller.setPadding(
+                  //                               pad.copyWith(top: val));
+                  //                         }),
+                  //                         _padCell('Bottom', pad.bottom, (val) {
+                  //                           controller.setPadding(
+                  //                               pad.copyWith(bottom: val));
+                  //                         }),
+                  //                         _padCell('Left', pad.left, (val) {
+                  //                           controller.setPadding(
+                  //                               pad.copyWith(left: val));
+                  //                         }),
+                  //                         _padCell('Right', pad.right, (val) {
+                  //                           controller.setPadding(
+                  //                               pad.copyWith(right: val));
+                  //                         }),
+                  //                       ],
+                  //                     );
+                  //                   },
+                  //                 ),
+                  //               ),
+                  //             );
+                  //           },
+                  //         ),
+                  //       ],
+                  //     ),
+                  //   ),
+                  // ),
+                  SizedBox(
+                    height: tabHeight,
+                    child: ColoredBox(
+                      color: Colors.grey.shade100,
+                      child: Padding(
+                        padding: const EdgeInsets.only(
+                          top: 5,
+                          left: 20,
+                          right: 20,
+                          bottom: 15,
+                        ),
+                        child: SafeArea(
+                          bottom: true,
+                          child: Row(
+                            children: [
+                              _BottomBtn(
+                                icon: Icons.add,
+                                text: 'APPEND',
+                                onPressed: controller.appendImage,
+                              ),
+                              const SizedBox(width: 10),
+                              _BottomBtn(
+                                icon: Icons.sort,
+                                onPressed: () =>
+                                    showReorderPage(context, controller),
+                                text: 'REORDER',
+                              ),
+                              const SizedBox(width: 10),
+                              _BottomBtn(
+                                icon: Icons.space_bar,
+                                onPressed: () =>
+                                    showSpacingEditPage(context, controller),
+                                text: 'SPACING',
+                              ),
+                              const SizedBox(width: 10),
+                              _BottomBtn(
+                                icon: Icons.image,
+                                onPressed: () => showBackgroundPanel(
+                                  context,
+                                  controller,
                                 ),
-                                const SizedBox(width: 10),
-                                _BottomBtn(
-                                  icon: Icons.sort,
-                                  onPressed: () => showReorderPage(context, controller),
-                                  text: 'REORDER',
-                                ),
-                                const SizedBox(width: 10),
-                                _BottomBtn(
-                                  icon: Icons.space_bar,
-                                  onPressed: () => showReorderPage(context, controller),
-                                  text: 'SPACING',
-                                ),
-                                const SizedBox(width: 10),
-                                _BottomBtn(
-                                  icon: Icons.image,
-                                  onPressed: () => showBackgroundPanel(
-                                    context,
-                                    controller,
-                                  ),
-                                  text: 'BACKGROUND',
-                                ),
-                              ],
-                            ),
+                                text: 'BACKGROUND',
+                              ),
+                            ],
                           ),
                         ),
                       ),
                     ),
-                  ],
-                ),
-              );
-            }
-          );
+                  ),
+                ],
+              ),
+            );
+          });
         },
       ),
     );
@@ -284,6 +286,20 @@ class _ImageJointPageState extends State<ImageJointPage> {
         builder: (context) => ImageReorderPage(
           controller,
         ),
+      ),
+    );
+  }
+
+  /// 显示空隙编辑页面
+  void showSpacingEditPage(
+    BuildContext context,
+    ImageEditorPainterController controller,
+  ) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) {
+          return ImageArgsPage(controller: controller);
+        },
       ),
     );
   }
@@ -388,15 +404,17 @@ class _ImageJointPageState extends State<ImageJointPage> {
   }
 }
 
-class _MainViewer extends StatelessWidget {
-  const _MainViewer({
+class ImageJointMainViewer extends StatelessWidget {
+  const ImageJointMainViewer({
     Key? key,
     required this.viewerHeight,
     required this.controller,
+    this.fitHeight = false,
   }) : super(key: key);
 
   final double viewerHeight;
   final ImageEditorPainterController controller;
+  final bool fitHeight;
 
   @override
   Widget build(BuildContext context) {
@@ -412,13 +430,16 @@ class _MainViewer extends StatelessWidget {
                 return ui.Size(controller.getWidth(), controller.getHeight());
               },
               builder: (context, value, child) {
+                if (value.width == 0 || value.height == 0) {
+                  return const SizedBox.shrink();
+                }
                 final isHorizontal = value.width > value.height;
                 final scaleW = ScreenAdaptor.screenWidth / value.width;
                 final scaleH =
                     value.width == 0 ? 1.0 : viewerHeight / value.height;
                 // final scale =
                 //     value.width == 0 ? 1.0 : (isHorizontal ? scaleW : scaleH);
-                final scale = value.width == 0 ? 1.0 : scaleW;
+                final scale = fitHeight ? scaleH : scaleW;
                 return Transform.scale(
                   scale: scale,
                   origin: Offset.zero,
