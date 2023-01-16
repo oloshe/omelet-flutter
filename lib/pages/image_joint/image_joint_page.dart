@@ -6,7 +6,6 @@ import 'dart:ui' as ui;
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:omelet/common/index.dart';
 import 'package:omelet/pages/image_joint/image_reorder_page.dart';
 import 'package:omelet/widgets/cell.dart';
@@ -66,7 +65,6 @@ class _ImageJointPageState extends State<ImageJointPage> {
           const tabHeight = 80.0;
           return LayoutBuilder(builder: (context, constraints) {
             final viewerHeight = constraints.maxHeight - tabHeight;
-            print(constraints);
             return SizedBox(
               width: double.infinity,
               child: Column(
@@ -298,7 +296,17 @@ class _ImageJointPageState extends State<ImageJointPage> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) {
-          return ImageArgsPage(controller: controller);
+          return ImageArgsPage(
+            controller: controller,
+            data: [
+              ImageArgData('Spacing Y', 0, 200, (value) {
+                controller.setSpacing(value);
+              }),
+              ImageArgData('Padding Horizontal', 0, 200, (value) {
+                controller.setSpacing(value);
+              }),
+            ],
+          );
         },
       ),
     );
@@ -409,49 +417,59 @@ class ImageJointMainViewer extends StatelessWidget {
     Key? key,
     required this.viewerHeight,
     required this.controller,
-    this.fitHeight = false,
+    this.fitScreen = false,
   }) : super(key: key);
 
   final double viewerHeight;
   final ImageEditorPainterController controller;
-  final bool fitHeight;
+  final bool fitScreen;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       height: viewerHeight,
       width: double.infinity,
-      child: SingleChildScrollView(
-        child: ColoredBox(
-          color: Colors.grey.shade300,
-          child: Center(
-            child: Selector<ImageEditorPainterController, ui.Size>(
-              selector: (_, controller) {
-                return ui.Size(controller.getWidth(), controller.getHeight());
-              },
-              builder: (context, value, child) {
-                if (value.width == 0 || value.height == 0) {
-                  return const SizedBox.shrink();
-                }
-                final isHorizontal = value.width > value.height;
-                final scaleW = ScreenAdaptor.screenWidth / value.width;
-                final scaleH =
-                    value.width == 0 ? 1.0 : viewerHeight / value.height;
-                // final scale =
-                //     value.width == 0 ? 1.0 : (isHorizontal ? scaleW : scaleH);
-                final scale = fitHeight ? scaleH : scaleW;
-                return Transform.scale(
-                  scale: scale,
-                  origin: Offset.zero,
-                  alignment: Alignment.topLeft,
-                  child: CustomPaint(
-                    size: value * scale,
-                    painter: ImageEditorPainter(
-                      controller: controller,
+      child: Center(
+        child: SingleChildScrollView(
+          child: ColoredBox(
+            color: Colors.grey.shade300,
+            child: Center(
+              child: Selector<ImageEditorPainterController, ui.Size>(
+                selector: (_, controller) {
+                  return ui.Size(controller.getWidth(), controller.getHeight());
+                },
+                builder: (context, value, child) {
+                  if (value.width == 0 || value.height == 0) {
+                    return const SizedBox.shrink();
+                  }
+                  final double scale = (() {
+                    final isHorizontal = value.width > value.height;
+                    final scaleW = ScreenAdaptor.screenWidth / value.width;
+                    final scaleH = viewerHeight / value.height;
+                    if (fitScreen) {
+                      if (viewerHeight < value.height) {
+                        return scaleH;
+                      } else {
+                        return scaleW;
+                      }
+                    } else {
+                      return scaleW;
+                    }
+                  })();
+
+                  return Transform.scale(
+                    scale: scale,
+                    origin: Offset.zero,
+                    alignment: Alignment.topLeft,
+                    child: CustomPaint(
+                      size: value * scale,
+                      painter: ImageEditorPainter(
+                        controller: controller,
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
           ),
         ),

@@ -17,3 +17,18 @@ class Utils {
     return Fluttertoast.showToast(msg: msg);
   }
 }
+
+class VM<T> with ChangeNotifier {
+  T _value;
+  T get value => _value;
+
+  VM(this._value);
+
+  setValue(T value) {
+    _value = value;
+  }
+
+  forceUpdate() {
+    notifyListeners();
+  }
+}

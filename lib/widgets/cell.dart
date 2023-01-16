@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:omelet/common/index.dart';
 import 'package:omelet/widgets/hover.dart';
@@ -54,7 +53,6 @@ class Cell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final titleTextStyle = Ts.black | Ts.s14;
     final padding_ = padding ??
         const EdgeInsets.symmetric(
           horizontal: 20,
@@ -72,12 +70,12 @@ class Cell extends StatelessWidget {
           if (leading != null) const SizedBox(width: 10),
           Expanded(
             child: title != null
-                ? DefaultTextStyle(
-              style: textStyle == null
-                  ? titleTextStyle
-                  : titleTextStyle | textStyle!,
-              child: title!,
-            )
+                ? textStyle != null
+                    ? DefaultTextStyle(
+                        style: textStyle!,
+                        child: title!,
+                      )
+                    : title!
                 : const SizedBox(),
           ),
           if (trailing != null) trailing!,
