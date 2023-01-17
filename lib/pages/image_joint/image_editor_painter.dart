@@ -235,6 +235,9 @@ class JointItem {
 
   void drawImageRect(Canvas canvas, Rect src, Rect dest, Paint paint) {
     if (image != null) {
+      // canvas.clipRRect(
+      //     RRect.fromLTRBAndCorners(100, 100, 20, 20)
+      // );
       canvas.drawImageRect(image!, src, dest, paint);
     }
   }

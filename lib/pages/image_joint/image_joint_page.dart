@@ -12,6 +12,8 @@ import 'package:omelet/widgets/cell.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
+typedef _ImageArgData = ImageArgData<ImageEditorPainterController, String>;
+
 class ImageJointPage extends StatefulWidget {
   const ImageJointPage({Key? key}) : super(key: key);
 
@@ -219,12 +221,12 @@ class _ImageJointPageState extends State<ImageJointPage> {
                               ),
                               const SizedBox(width: 10),
                               _BottomBtn(
-                                icon: Icons.image,
+                                icon: Icons.color_lens_outlined,
                                 onPressed: () => showBackgroundPanel(
                                   context,
                                   controller,
                                 ),
-                                text: 'BACKGROUND',
+                                text: 'COLOR',
                               ),
                             ],
                           ),
@@ -299,12 +301,42 @@ class _ImageJointPageState extends State<ImageJointPage> {
           return ImageArgsPage(
             controller: controller,
             data: [
-              ImageArgData('Spacing Y', 0, 200, (value) {
-                controller.setSpacing(value);
-              }),
-              ImageArgData('Padding Horizontal', 0, 200, (value) {
-                controller.setSpacing(value);
-              }),
+              _ImageArgData(
+                name: 'Spacing Y',
+                min: 0,
+                max: 200,
+                initialValue: controller.spacing,
+                onChanged: (value) {
+                  controller.setSpacing(value);
+                },
+                selector: (c) => c.spacing.toStringAsFixed(0),
+              ),
+              _ImageArgData(
+                name: 'Padding Horizontal',
+                min: 0,
+                max: 200,
+                initialValue: controller.padding.left,
+                onChanged: (value) {
+                  controller.setPadding(controller.padding.copyWith(
+                    left: value,
+                    right: value,
+                  ));
+                },
+                selector: (c) => c.padding.left.toStringAsFixed(0),
+              ),
+              _ImageArgData(
+                name: 'Padding Vertical',
+                min: 0,
+                max: 200,
+                initialValue: controller.padding.top,
+                onChanged: (value) {
+                  controller.setPadding(controller.padding.copyWith(
+                    top: value,
+                    bottom: value,
+                  ));
+                },
+                selector: (c) => c.padding.top.toStringAsFixed(0),
+              ),
             ],
           );
         },
@@ -426,6 +458,7 @@ class ImageJointMainViewer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final viewerWidth = ScreenAdaptor.screenWidth;
     return SizedBox(
       height: viewerHeight,
       width: double.infinity,
@@ -444,11 +477,15 @@ class ImageJointMainViewer extends StatelessWidget {
                   }
                   final double scale = (() {
                     final isHorizontal = value.width > value.height;
-                    final scaleW = ScreenAdaptor.screenWidth / value.width;
+                    final viewerFactor = viewerWidth / viewerHeight;
+                    final imgFactor = value.width / value.height;
+                    final scaleW = viewerWidth / value.width;
                     final scaleH = viewerHeight / value.height;
+                    print("viewer: $viewerFactor, $imgFactor $fitScreen");
                     if (fitScreen) {
-                      if (viewerHeight < value.height) {
-                        return scaleH;
+                      // 是否适应屏幕
+                      if (viewerFactor < imgFactor) {
+                        return scaleW;
                       } else {
                         return scaleW;
                       }

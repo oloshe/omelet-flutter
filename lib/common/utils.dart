@@ -13,7 +13,7 @@ class Utils {
   //
   // }
 
-  static Future<bool?> toast(String  msg) {
+  static Future<bool?> toast(String msg) {
     return Fluttertoast.showToast(msg: msg);
   }
 }
@@ -26,9 +26,43 @@ class VM<T> with ChangeNotifier {
 
   setValue(T value) {
     _value = value;
+    notifyListeners();
   }
 
   forceUpdate() {
     notifyListeners();
+  }
+}
+
+class VMSelector<T> extends StatelessWidget {
+  final VM<T> model;
+  final T Function(BuildContext, VM<T>)? selector;
+  final ValueWidgetBuilder<T> builder;
+  final Widget? child;
+
+  const VMSelector({
+    Key? key,
+    required this.model,
+    required this.builder,
+    this.selector,
+    this.child,
+  }) : super(key: key);
+
+  const VMSelector.value({
+    Key? key,
+    required VM<T> value,
+    required this.builder,
+    this.selector,
+    this.child,
+  })  : model = value,
+        super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Selector<VM<T>, T>(
+      selector: selector ?? (context, m) => m.value,
+      builder: builder,
+      child: child,
+    );
   }
 }
