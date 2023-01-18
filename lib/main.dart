@@ -1,4 +1,3 @@
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,11 +5,13 @@ import 'package:omelet/pages/image_joint/image_joint_page.dart';
 
 import 'common/index.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   LicenseRegistry.addLicense(() async* {
     final license = await rootBundle.loadString('google_fonts/OFL.txt');
     yield LicenseEntryWithLineBreaks(['google_fonts'], license);
   });
+  await Utils.init();
   runApp(const MyApp());
 }
 
@@ -23,7 +24,20 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        primarySwatch: Colors.yellow,
+        primarySwatch: Colors.blue,
+        appBarTheme: const AppBarTheme(
+          color: Colors.yellow,
+          foregroundColor: Colors.black
+        ),
+        // buttonTheme: const ButtonThemeData(
+        //   buttonColor: Colors.blue,
+        //   textTheme: ButtonTextTheme.primary,
+        // ),
+        // textButtonTheme: TextButtonThemeData(
+        //   style: ButtonStyle(
+        //     foregroundColor: MaterialStateProperty.all(Colors.blue),
+        //   ),
+        // ),
       ),
       debugShowCheckedModeBanner: false,
       navigatorKey: Utils.navigatorKey,
@@ -33,4 +47,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-

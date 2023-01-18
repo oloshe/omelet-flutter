@@ -5,7 +5,6 @@ import 'package:flutter_reorderable_grid_view/entities/order_update_entity.dart'
 import 'package:flutter_reorderable_grid_view/widgets/widgets.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:omelet/common/index.dart';
-import 'dart:ui' as ui;
 
 import 'package:omelet/pages/image_joint/image_editor_painter.dart';
 
@@ -50,7 +49,7 @@ class _ImageReorderPageState extends State<ImageReorderPage> {
           ),
           IconButton(
             onPressed: () {
-              widget.controller.applyReorder(items);
+              widget.controller.applyNewList(items);
               Utils.toast('Applied');
               Navigator.of(context).pop();
             },

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:omelet/ext/index.dart';
 import 'package:omelet/pages/image_joint/image_args_page.dart';
 import 'package:omelet/pages/image_joint/image_editor_painter.dart';
 import 'dart:ui' as ui;
@@ -8,7 +10,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:omelet/common/index.dart';
 import 'package:omelet/pages/image_joint/image_reorder_page.dart';
-import 'package:omelet/widgets/cell.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
@@ -23,7 +24,6 @@ class ImageJointPage extends StatefulWidget {
 
 class _ImageJointPageState extends State<ImageJointPage> {
   ImageEditorPainterController controller = ImageEditorPainterController();
-  ImageJointPageController state = ImageJointPageController();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,13 +43,30 @@ class _ImageJointPageState extends State<ImageJointPage> {
           ),
           IconButton(
             onPressed: () {
+              // controller.saveSetting(context);
               showMenu(
                 context: context,
                 position: const RelativeRect.fromLTRB(1, 0, 0, 0),
                 items: <PopupMenuEntry>[
                   PopupMenuItem(
+                    onTap: () async {
+                      SchedulerBinding.instance.addPostFrameCallback((_) {
+                        controller.saveSetting(context);
+                      });
+                    },
+                    child: const Text('Presets'),
+                  ),
+                  PopupMenuItem(
+                    onTap: () async {
+                      SchedulerBinding.instance.addPostFrameCallback((_) {
+                        controller.saveSetting(context);
+                      });
+                    },
+                    child: const Text('Save as Preset'),
+                  ),
+                  PopupMenuItem(
                     onTap: controller.clear,
-                    child: const Text('Clear All'),
+                    child: const Text('Clear Images'),
                   ),
                 ],
               );
@@ -61,7 +78,6 @@ class _ImageJointPageState extends State<ImageJointPage> {
       body: MultiProvider(
         providers: [
           ChangeNotifierProvider.value(value: controller),
-          ChangeNotifierProvider.value(value: state),
         ],
         builder: (context, child) {
           const tabHeight = 80.0;
@@ -72,119 +88,9 @@ class _ImageJointPageState extends State<ImageJointPage> {
               child: Column(
                 children: <Widget>[
                   ImageJointMainViewer(
-                      viewerHeight: viewerHeight, controller: controller),
-                  // Expanded(
-                  //   child: SingleChildScrollView(
-                  //     child: Column(
-                  //       children: [
-                  //         Selector<ImageEditorPainterController, double>(
-                  //           selector: (context, val) => val.spacing,
-                  //           builder: (context, val, child) {
-                  //             return Cell(
-                  //               leading: const Text("Spacing"),
-                  //               title: Row(
-                  //                 children: [
-                  //                   SizedBox(
-                  //                     width: 25,
-                  //                     child: Text(val.toInt().toString()),
-                  //                   ),
-                  //                   Expanded(
-                  //                     child: Slider(
-                  //                       value: val,
-                  //                       min: 0,
-                  //                       max: 200,
-                  //                       onChanged: (val) {
-                  //                         controller.setSpacing(val);
-                  //                       },
-                  //                     ),
-                  //                   )
-                  //                 ],
-                  //               ),
-                  //             );
-                  //           },
-                  //         ),
-                  //         Selector<ImageEditorPainterController, EdgeInsets>(
-                  //           selector: (context, val) => val.padding,
-                  //           builder: (context, val, child) {
-                  //             return Cell(
-                  //               leading: const Text('Padding'),
-                  //               title: Text(
-                  //                 'T ${val.top.toInt().toString()} '
-                  //                 'B ${val.bottom.toInt().toString()} '
-                  //                 'L ${val.left.toInt().toString()} '
-                  //                 'R ${val.right.toInt().toString()}',
-                  //                 style: const TextStyle(
-                  //                   color: Colors.grey,
-                  //                 ),
-                  //               ),
-                  //               trailing:
-                  //                   Selector<ImageJointPageController, bool>(
-                  //                       selector: (_, val) => val.paddingEditing,
-                  //                       builder: (context, show, child) {
-                  //                         if (show) {
-                  //                           return TextButton(
-                  //                             onPressed: () {
-                  //                               state.donePadding();
-                  //                             },
-                  //                             child: const Text("Done"),
-                  //                           );
-                  //                         } else {
-                  //                           return TextButton(
-                  //                             onPressed: () {
-                  //                               state.editPadding();
-                  //                             },
-                  //                             child: const Text("Edit"),
-                  //                           );
-                  //                         }
-                  //                       }),
-                  //             );
-                  //           },
-                  //         ),
-                  //         Selector<ImageJointPageController, bool>(
-                  //           selector: (_, val) => val.paddingEditing,
-                  //           builder: (context, show, child) {
-                  //             if (!show) {
-                  //               return const SizedBox.shrink();
-                  //             }
-                  //             return ColoredBox(
-                  //               color: const Color(0xfff1f1f1),
-                  //               child: Padding(
-                  //                 padding:
-                  //                     const EdgeInsets.symmetric(vertical: 10),
-                  //                 child: Selector<ImageEditorPainterController,
-                  //                     EdgeInsets>(
-                  //                   selector: (_, val) => val.padding,
-                  //                   builder: (context, pad, child) {
-                  //                     return Column(
-                  //                       children: [
-                  //                         _padCell('Top', pad.top, (val) {
-                  //                           controller.setPadding(
-                  //                               pad.copyWith(top: val));
-                  //                         }),
-                  //                         _padCell('Bottom', pad.bottom, (val) {
-                  //                           controller.setPadding(
-                  //                               pad.copyWith(bottom: val));
-                  //                         }),
-                  //                         _padCell('Left', pad.left, (val) {
-                  //                           controller.setPadding(
-                  //                               pad.copyWith(left: val));
-                  //                         }),
-                  //                         _padCell('Right', pad.right, (val) {
-                  //                           controller.setPadding(
-                  //                               pad.copyWith(right: val));
-                  //                         }),
-                  //                       ],
-                  //                     );
-                  //                   },
-                  //                 ),
-                  //               ),
-                  //             );
-                  //           },
-                  //         ),
-                  //       ],
-                  //     ),
-                  //   ),
-                  // ),
+                    viewerHeight: viewerHeight,
+                    controller: controller,
+                  ),
                   SizedBox(
                     height: tabHeight,
                     child: ColoredBox(
@@ -198,37 +104,47 @@ class _ImageJointPageState extends State<ImageJointPage> {
                         ),
                         child: SafeArea(
                           bottom: true,
-                          child: Row(
-                            children: [
-                              _BottomBtn(
-                                icon: Icons.add,
-                                text: 'APPEND',
-                                onPressed: controller.appendImage,
-                              ),
-                              const SizedBox(width: 10),
-                              _BottomBtn(
-                                icon: Icons.sort,
-                                onPressed: () =>
-                                    showReorderPage(context, controller),
-                                text: 'REORDER',
-                              ),
-                              const SizedBox(width: 10),
-                              _BottomBtn(
-                                icon: Icons.space_bar,
-                                onPressed: () =>
-                                    showSpacingEditPage(context, controller),
-                                text: 'SPACING',
-                              ),
-                              const SizedBox(width: 10),
-                              _BottomBtn(
-                                icon: Icons.color_lens_outlined,
-                                onPressed: () => showBackgroundPanel(
-                                  context,
-                                  controller,
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [
+                                _BottomBtn(
+                                  icon: Icons.add_rounded,
+                                  text: 'APPEND',
+                                  onPressed: controller.appendImage,
                                 ),
-                                text: 'COLOR',
-                              ),
-                            ],
+                                const SizedBox(width: 2),
+                                _BottomBtn(
+                                  icon: Icons.sort_rounded,
+                                  onPressed: () =>
+                                      showReorderPage(context, controller),
+                                  text: 'REORDER',
+                                ),
+                                const SizedBox(width: 2),
+                                _BottomBtn(
+                                  icon: Icons.space_bar_rounded,
+                                  onPressed: () =>
+                                      showSpacingEditPage(context, controller),
+                                  text: 'SPACING',
+                                ),
+                                const SizedBox(width: 2),
+                                _BottomBtn(
+                                  icon: Icons.texture_rounded,
+                                  onPressed: () =>
+                                      showShadowEdit(context, controller),
+                                  text: 'SHADOW',
+                                ),
+                                const SizedBox(width: 2),
+                                _BottomBtn(
+                                  icon: Icons.color_lens_rounded,
+                                  onPressed: () => showBackgroundPanel(
+                                    context,
+                                    controller,
+                                  ),
+                                  text: 'COLOR',
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -246,9 +162,9 @@ class _ImageJointPageState extends State<ImageJointPage> {
   /// 选取颜色
   Future<Color?> pickColor(
     BuildContext context,
-    ImageEditorPainterController controller,
+    Color initialColor,
   ) {
-    Color selectColor = controller.bgColor;
+    Color selectColor = initialColor;
     return showDialog<Color?>(
       context: context,
       builder: (context) {
@@ -256,7 +172,7 @@ class _ImageJointPageState extends State<ImageJointPage> {
           title: const Text('Pick a color!'),
           content: SingleChildScrollView(
             child: SlidePicker(
-              pickerColor: controller.bgColor,
+              pickerColor: initialColor,
               onColorChanged: (clr) {
                 selectColor = clr;
               },
@@ -265,7 +181,6 @@ class _ImageJointPageState extends State<ImageJointPage> {
           actions: [
             TextButton(
               onPressed: () {
-                controller.setBgColor(selectColor);
                 Navigator.of(context).pop(selectColor);
               },
               child: const Text('Got it'),
@@ -304,7 +219,7 @@ class _ImageJointPageState extends State<ImageJointPage> {
               _ImageArgData(
                 name: 'Spacing Y',
                 min: 0,
-                max: 200,
+                max: 500,
                 initialValue: controller.spacing,
                 onChanged: (value) {
                   controller.setSpacing(value);
@@ -314,7 +229,7 @@ class _ImageJointPageState extends State<ImageJointPage> {
               _ImageArgData(
                 name: 'Padding Horizontal',
                 min: 0,
-                max: 200,
+                max: 500,
                 initialValue: controller.padding.left,
                 onChanged: (value) {
                   controller.setPadding(controller.padding.copyWith(
@@ -327,7 +242,7 @@ class _ImageJointPageState extends State<ImageJointPage> {
               _ImageArgData(
                 name: 'Padding Vertical',
                 min: 0,
-                max: 200,
+                max: 500,
                 initialValue: controller.padding.top,
                 onChanged: (value) {
                   controller.setPadding(controller.padding.copyWith(
@@ -336,6 +251,64 @@ class _ImageJointPageState extends State<ImageJointPage> {
                   ));
                 },
                 selector: (c) => c.padding.top.toStringAsFixed(0),
+              ),
+              _ImageArgData(
+                name: 'Radius',
+                min: 0,
+                max: 500,
+                initialValue: controller.radius.x,
+                onChanged: (value) {
+                  controller.setRadius(Radius.circular(value));
+                },
+                selector: (c) => c.radius.x.toStringAsFixed(0),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  /// 显示阴影编辑
+  void showShadowEdit(
+    BuildContext context,
+    ImageEditorPainterController controller,
+  ) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) {
+          return ImageArgsPage(
+            controller: controller,
+            data: [
+              _ImageArgData(
+                name: 'Shadow Elevation',
+                min: 0,
+                max: 50,
+                initialValue: controller.shadowElevation,
+                onChanged: (value) {
+                  controller.setShadowElevation(value);
+                },
+                selector: (c) => c.shadowElevation.toStringAsFixed(1),
+              ),
+              _ImageArgData(
+                name: 'Shadow Offset X',
+                min: -100,
+                max: 100,
+                initialValue: controller.shadowOffset.dx,
+                onChanged: (value) {
+                  controller.setShadowOffset(dx: value);
+                },
+                selector: (c) => c.shadowOffset.dx.toStringAsFixed(0),
+              ),
+              _ImageArgData(
+                name: 'Shadow Offset Y',
+                min: -100,
+                max: 100,
+                initialValue: controller.shadowOffset.dy,
+                onChanged: (value) {
+                  controller.setShadowOffset(dy: value);
+                },
+                selector: (c) => c.shadowOffset.dy.toStringAsFixed(0),
               ),
             ],
           );
@@ -360,86 +333,112 @@ class _ImageJointPageState extends State<ImageJointPage> {
     BuildContext context,
     ImageEditorPainterController controller,
   ) {
+    var initialBgColor = controller.bgColor;
+    var initialShadowColor = controller.shadowColor;
     showModalBottomSheet(
       context: context,
-      barrierColor: Colors.black26,
+      barrierColor: Colors.transparent,
+      backgroundColor: Colors.grey.shade300.withOpacity(0.9),
+      elevation: 30,
       builder: (context) {
-        var color = controller.bgColor;
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            StatefulBuilder(
-              builder: (context, setState) {
-                return Cell(
-                  leading: const Text(
-                    "Background",
-                    style: Ts.s14,
-                  ),
-                  title: Align(
-                    alignment: Alignment.centerLeft,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: color,
-                        border: Border.all(color: const Color(0xff333333)),
-                      ),
-                      child: SizedBox.fromSize(
-                        size: const ui.Size.fromRadius(15),
-                      ),
-                    ),
-                  ),
-                  trailing: TextButton(
-                    onPressed: () async {
-                      final newColor = await pickColor(context, controller);
-                      if (newColor != null) {
-                        setState(() {
-                          color = newColor;
-                        });
-                      }
+        var bgColor = controller.bgColor;
+        var shadowColor = controller.shadowColor;
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      controller.setBgColor(initialBgColor);
+                      controller.setShadowColor(initialShadowColor);
+                      Navigator.of(context).pop();
                     },
                     child: const Text(
-                      'Pick Color',
-                      style: TextStyle(
-                        decoration: TextDecoration.underline,
-                      ),
+                      'Cancel',
+                      style: Ts.grey,
                     ),
                   ),
-                );
-              },
-            ),
-          ],
+                  TextButton(
+                    onPressed: Navigator.of(context).pop,
+                    child: const Text(
+                      'Confirm',
+                      style: Ts.blue,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              StatefulBuilder(
+                builder: (context, setState) {
+                  return ColoredBox(
+                    color: shadowColor,
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: TextButton(
+                        onPressed: () async {
+                          final newColor = await pickColor(context, shadowColor);
+                          if (newColor != null) {
+                            controller.setShadowColor(newColor);
+                            setState(() {
+                              shadowColor = newColor;
+                            });
+                          }
+                        },
+                        child: Text(
+                          'Shadow Color',
+                          style: GoogleFonts.maShanZheng(
+                            textStyle: TextStyle(
+                              color: shadowColor.invert,
+                              fontSize: 24,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 10),
+              StatefulBuilder(
+                builder: (context, setState) {
+                  return ColoredBox(
+                    color: bgColor,
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: TextButton(
+                        onPressed: () async {
+                          final newColor = await pickColor(context, bgColor);
+                          if (newColor != null) {
+                            controller.setBgColor(newColor);
+                            setState(() {
+                              bgColor = newColor;
+                            });
+                          }
+                        },
+                        child: Text(
+                          'Background Color',
+                          style: GoogleFonts.maShanZheng(
+                            textStyle: TextStyle(
+                              color: bgColor.invert,
+                              fontSize: 24,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 80),
+            ],
+          ),
         );
       },
-    );
-  }
-
-  Cell _padCell(
-    String title,
-    double paddingVal,
-    ValueChanged<double> onChanged,
-  ) {
-    return Cell(
-      height: 40,
-      leading: SizedBox(
-        width: 50,
-        child: Text(title),
-      ),
-      title: Row(
-        children: [
-          SizedBox(
-            width: 30,
-            child: Text(paddingVal.toInt().toString()),
-          ),
-          Expanded(
-            child: Slider(
-              value: paddingVal,
-              min: 0,
-              max: 200,
-              onChanged: onChanged,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -465,7 +464,7 @@ class ImageJointMainViewer extends StatelessWidget {
       child: Center(
         child: SingleChildScrollView(
           child: ColoredBox(
-            color: Colors.grey.shade300,
+            color: Colors.grey.shade400,
             child: Center(
               child: Selector<ImageEditorPainterController, ui.Size>(
                 selector: (_, controller) {
@@ -476,19 +475,23 @@ class ImageJointMainViewer extends StatelessWidget {
                     return const SizedBox.shrink();
                   }
                   final double scale = (() {
-                    final isHorizontal = value.width > value.height;
-                    final viewerFactor = viewerWidth / viewerHeight;
-                    final imgFactor = value.width / value.height;
+                    // final isHorizontal = value.width > value.height;
+                    // final viewerFactor = viewerWidth / viewerHeight;
+                    // final imgFactor = value.width / value.height; // 值越大，越扁
                     final scaleW = viewerWidth / value.width;
                     final scaleH = viewerHeight / value.height;
-                    print("viewer: $viewerFactor, $imgFactor $fitScreen");
+                    // print("viewer: $viewerFactor, $imgFactor $fitScreen");
                     if (fitScreen) {
                       // 是否适应屏幕
-                      if (viewerFactor < imgFactor) {
-                        return scaleW;
-                      } else {
+                      if (scaleH * value.width > viewerWidth) {
                         return scaleW;
                       }
+                      return scaleH;
+                      // if (viewerFactor < img   Factor) {
+                      //   return scaleW;
+                      // } else {
+                      //   return scaleW;
+                      // }
                     } else {
                       return scaleW;
                     }
@@ -515,20 +518,6 @@ class ImageJointMainViewer extends StatelessWidget {
   }
 }
 
-class ImageJointPageController with ChangeNotifier {
-  bool paddingEditing = false;
-
-  void editPadding() {
-    paddingEditing = true;
-    notifyListeners();
-  }
-
-  void donePadding() {
-    paddingEditing = false;
-    notifyListeners();
-  }
-}
-
 class _BottomBtn extends StatelessWidget {
   final VoidCallback? onPressed;
   final IconData icon;
@@ -548,6 +537,7 @@ class _BottomBtn extends StatelessWidget {
       style: ButtonStyle(
         backgroundColor: MaterialStateProperty.all(Colors.transparent),
         shadowColor: MaterialStateProperty.all(Colors.transparent),
+        foregroundColor: MaterialStateProperty.all(Colors.black),
         padding: MaterialStateProperty.all(
           const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
         ),

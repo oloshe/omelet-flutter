@@ -28,6 +28,8 @@ class Ts {
 
   static const TextStyle white = TextStyle(color: Colors.white);
   static const TextStyle black = TextStyle(color: Colors.black);
+  static const TextStyle blue = TextStyle(color: Colors.blue);
+  static const TextStyle grey = TextStyle(color: Colors.grey);
 
   /// 字体大小 单位为rpx
   static TextStyle size(double size) => TextStyle(fontSize: size);

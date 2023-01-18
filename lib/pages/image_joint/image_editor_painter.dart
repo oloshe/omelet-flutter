@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -5,6 +6,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:omelet/common/index.dart';
 
 class ImageEditorPainter extends CustomPainter {
   ImageEditorPainterController controller;
@@ -32,6 +34,9 @@ class ImageEditorPainter extends CustomPainter {
 class ImageEditorPainterController with ChangeNotifier {
   List<JointItem> items = [];
 
+  /// 预设名字
+  String presetName = 'Unnamed Preset';
+
   /// 是否是水平
   bool isHorizontal = false;
 
@@ -44,8 +49,57 @@ class ImageEditorPainterController with ChangeNotifier {
   /// 背景颜色
   Color bgColor = Colors.white;
 
+  /// 圆角
+  Radius radius = Radius.zero;
+
+  /// 阴影偏移
+  Offset shadowOffset = Offset.zero;
+
+  /// 阴影高度
+  double shadowElevation = 0;
+
+  /// 阴影颜色
+  Color shadowColor = Colors.black;
+
   double _maxImgWidth = 0;
   double _maxImgHeight = 0;
+
+  ImageEditorPainterController();
+
+  factory ImageEditorPainterController.fromJson(Map<String, dynamic> json) {
+    return ImageEditorPainterController()
+      ..presetName = json['presetName']
+      ..isHorizontal = json['isHorizontal']
+      ..spacing = json['spacing']
+      ..padding = EdgeInsets.fromLTRB(
+        json['paddingLeft'],
+        json['paddingTop'],
+        json['paddingRight'],
+        json['paddingBottom'],
+      )
+      ..bgColor = Color(json['bgColor'])
+      ..shadowColor = Color(json['shadowColor'])
+      ..radius = Radius.elliptical(json['radiusX'], json['radiusY'])
+      ..shadowOffset = Offset(json['shadowOffsetDx'], json['shadowOffsetDy'])
+      ..shadowElevation = json['shadowElevation'];
+  }
+
+  Map<String, dynamic> toJson() => {
+        'presetName': presetName,
+        'isHorizontal': isHorizontal,
+        'spacing': spacing,
+        'paddingLeft': padding.left,
+        'paddingTop': padding.top,
+        'paddingRight': padding.right,
+        'paddingBottom': padding.bottom,
+        'bgColor': bgColor.value,
+        'shadowColor': shadowColor.value,
+        'radiusX': radius.x,
+        'radiusY': radius.y,
+        'shadowOffsetDx': shadowOffset.dx,
+        'shadowOffsetDy': shadowOffset.dy,
+        'shadowElevation': shadowElevation,
+      };
 
   /// 宽度
   double getWidth() {
@@ -149,6 +203,38 @@ class ImageEditorPainterController with ChangeNotifier {
     }
   }
 
+  /// 设置圆角
+  setRadius(Radius val) {
+    radius = val;
+    notifyListeners();
+  }
+
+  void applyNewList(List<JointItem> newList) {
+    items = newList;
+    _updateMaxImgSize();
+    notifyListeners();
+  }
+
+  void setShadowElevation(double newVal) {
+    shadowElevation = newVal;
+    notifyListeners();
+  }
+
+  void setShadowOffset({double? dx, double? dy}) {
+    if (dx != null) {
+      shadowOffset = Offset(dx, shadowOffset.dy);
+    }
+    if (dy != null) {
+      shadowOffset = Offset(shadowOffset.dx, dy);
+    }
+    notifyListeners();
+  }
+
+  void setShadowColor(Color newColor) {
+    shadowColor = newColor;
+    notifyListeners();
+  }
+
   void paint(Canvas canvas, Size size) {
     if (items.isEmpty) {
       return;
@@ -176,7 +262,7 @@ class ImageEditorPainterController with ChangeNotifier {
         dest = Rect.fromLTWH(currLeft, currTop, maxWidth, dh);
         currTop += dh + spacing;
       }
-      item.drawImageRect(canvas, src, dest, Paint());
+      item.drawImageRect(canvas, src, dest, Paint(), this);
     }
   }
 
@@ -187,15 +273,60 @@ class ImageEditorPainterController with ChangeNotifier {
     final h = getHeight();
     paint(canvas, ui.Size(w, h));
     final pic = recorder.endRecording();
-    print(">>> $w $h");
     final img = await pic.toImage(w.toInt(), h.toInt());
     final pngBytes = await img.toByteData(format: ui.ImageByteFormat.png);
     return Uint8List.view(pngBytes!.buffer);
   }
 
-  void applyReorder(List<JointItem> newList) {
-    items = newList;
-    notifyListeners();
+  void saveSetting(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        var oldName = presetName;
+        return AlertDialog(
+          title: const Text('Save as Preset'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Save your current setting to presets'),
+              TextField(
+                  controller: TextEditingController(text: presetName),
+                  onChanged: (str) => presetName = str,
+                  decoration: const InputDecoration(
+                    labelText: 'Preset Name',
+                  )),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                presetName = oldName;
+              },
+              child: const Text(
+                'cancel',
+                style: TextStyle(
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                final jsonStr = const JsonEncoder().convert(this);
+                const key = 'presets';
+                final stringList = Utils.prefs.getStringList(key) ?? [];
+                stringList.add(jsonStr);
+                Utils.prefs.setStringList(key, stringList);
+                // print("saved");
+                Navigator.of(context).pop();
+                Utils.toast('Preset Saved');
+              },
+              child: const Text('save'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 
@@ -233,12 +364,46 @@ class JointItem {
     }
   }
 
-  void drawImageRect(Canvas canvas, Rect src, Rect dest, Paint paint) {
+  void drawImageRect(
+    Canvas canvas,
+    Rect src,
+    Rect dest,
+    Paint paint,
+    ImageEditorPainterController ctrl,
+  ) {
     if (image != null) {
-      // canvas.clipRRect(
-      //     RRect.fromLTRBAndCorners(100, 100, 20, 20)
-      // );
+      final radius = ctrl.radius;
+      // 阴影
+      Path path = Path()
+        ..addRRect(RRect.fromLTRBAndCorners(
+          dest.left + ctrl.shadowOffset.dx / 2,
+          dest.top + ctrl.shadowOffset.dy / 2,
+          dest.right + ctrl.shadowOffset.dx / 2,
+          dest.bottom + ctrl.shadowOffset.dy / 2,
+          topLeft: radius,
+          topRight: radius,
+          bottomLeft: radius,
+          bottomRight: radius,
+        ));
+      canvas.drawShadow(path, ctrl.shadowColor, ctrl.shadowElevation, true);
+      canvas.save();
+
+      // 圆角
+      if (radius != Radius.zero) {
+        canvas.clipRRect(RRect.fromLTRBAndCorners(
+          dest.left,
+          dest.top,
+          dest.right,
+          dest.bottom,
+          topLeft: radius,
+          topRight: radius,
+          bottomLeft: radius,
+          bottomRight: radius,
+        ));
+      }
+
       canvas.drawImageRect(image!, src, dest, paint);
+      canvas.restore();
     }
   }
 
