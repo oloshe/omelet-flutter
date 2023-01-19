@@ -11,7 +11,8 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:omelet/common/index.dart';
-import 'package:omelet/pages/image_joint/image_reorder_page.dart';
+import 'package:omelet/pages/image_joint/image_joint_presets.dart';
+import 'package:omelet/pages/image_joint/images_edit_page.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
@@ -53,8 +54,16 @@ class _ImageJointPageState extends State<ImageJointPage> {
                 items: <PopupMenuEntry>[
                   PopupMenuItem(
                     onTap: () async {
-                      SchedulerBinding.instance.addPostFrameCallback((_) {
-                        controller.saveSetting(context);
+                      SchedulerBinding.instance.addPostFrameCallback((_) async {
+                        final ImageEditorPainterController ctrl = await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) {
+                              return const ImageJointPresets();
+                            },
+                          ),
+                        );
+                        controller.merge(ctrl);
+                        Utils.toast('Applied');
                       });
                     },
                     child: const Text('Presets'),
@@ -197,7 +206,7 @@ class _ImageJointPageState extends State<ImageJointPage> {
   ) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => ImageReorderPage(
+        builder: (context) => ImagesEditPage(
           controller,
         ),
       ),
@@ -324,7 +333,8 @@ class _ImageJointPageState extends State<ImageJointPage> {
     }
     final img = await controller.export();
     final dir = await getTemporaryDirectory();
-    final file = await File('${dir.path}/${DateTime.now().millisecond}.png').writeAsBytes(img);
+    final file = await File('${dir.path}/${DateTime.now().millisecond}.png')
+        .writeAsBytes(img);
     await ImageGallerySaver.saveFile(file.path);
     Fluttertoast.showToast(msg: 'Saved');
   }
@@ -382,7 +392,8 @@ class _ImageJointPageState extends State<ImageJointPage> {
                       width: double.infinity,
                       child: TextButton(
                         onPressed: () async {
-                          final newColor = await pickColor(context, shadowColor);
+                          final newColor =
+                              await pickColor(context, shadowColor);
                           if (newColor != null) {
                             controller.setShadowColor(newColor);
                             setState(() {

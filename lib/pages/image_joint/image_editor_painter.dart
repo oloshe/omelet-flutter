@@ -38,6 +38,8 @@ class ImageEditorPainterController with ChangeNotifier {
 
   /// 预设名字
   String presetName = 'Unnamed Preset';
+  /// 预设备注
+  String presetRemark = '';
 
   /// 是否是水平
   bool isHorizontal = false;
@@ -71,6 +73,7 @@ class ImageEditorPainterController with ChangeNotifier {
   factory ImageEditorPainterController.fromJson(Map<String, dynamic> json) {
     return ImageEditorPainterController()
       ..presetName = json['presetName']
+      ..presetRemark = json['presetName']
       ..isHorizontal = json['isHorizontal']
       ..spacing = json['spacing']
       ..padding = EdgeInsets.fromLTRB(
@@ -88,6 +91,7 @@ class ImageEditorPainterController with ChangeNotifier {
 
   Map<String, dynamic> toJson() => {
         'presetName': presetName,
+        'presetRemark': presetRemark,
         'isHorizontal': isHorizontal,
         'spacing': spacing,
         'paddingLeft': padding.left,
@@ -105,6 +109,7 @@ class ImageEditorPainterController with ChangeNotifier {
 
   void merge(ImageEditorPainterController other) {
     presetName = other.presetName;
+    presetRemark = other.presetRemark;
     isHorizontal = other.isHorizontal;
     spacing = other.spacing;
     padding = other.padding.copyWith();
@@ -113,6 +118,7 @@ class ImageEditorPainterController with ChangeNotifier {
     radius = Radius.elliptical(other.radius.x, other.radius.y);
     shadowOffset = Offset(other.shadowOffset.dx, other.shadowOffset.dy);
     shadowElevation = other.shadowElevation;
+    notifyListeners();
   }
 
   /// 宽度
@@ -291,6 +297,7 @@ class ImageEditorPainterController with ChangeNotifier {
       context: context,
       builder: (context) {
         var oldName = presetName;
+        var oldRemark = presetRemark;
         return AlertDialog(
           title: const Text('Save as Preset'),
           content: Column(
@@ -304,6 +311,13 @@ class ImageEditorPainterController with ChangeNotifier {
                   labelText: 'Preset Name',
                 ),
               ),
+              TextField(
+                controller: TextEditingController(text: presetRemark),
+                onChanged: (str) => presetRemark = str,
+                decoration: const InputDecoration(
+                  labelText: 'Preset Remark',
+                ),
+              ),
             ],
           ),
           actions: [
@@ -311,6 +325,7 @@ class ImageEditorPainterController with ChangeNotifier {
               onPressed: () {
                 Navigator.of(context).pop();
                 presetName = oldName;
+                presetRemark = oldRemark;
               },
               child: const Text(
                 'cancel',

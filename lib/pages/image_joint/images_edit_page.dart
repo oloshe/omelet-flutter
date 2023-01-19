@@ -9,15 +9,15 @@ import 'package:omelet/pages/image_joint/image_editor_painter.dart';
 import 'package:omelet/widgets/cell.dart';
 import 'package:reorderables/reorderables.dart';
 
-class ImageReorderPage extends StatefulWidget {
+class ImagesEditPage extends StatefulWidget {
   final ImageEditorPainterController controller;
-  const ImageReorderPage(this.controller, {Key? key}) : super(key: key);
+  const ImagesEditPage(this.controller, {Key? key}) : super(key: key);
 
   @override
-  State<ImageReorderPage> createState() => _ImageReorderPageState();
+  State<ImagesEditPage> createState() => _ImagesEditPageState();
 }
 
-class _ImageReorderPageState extends State<ImageReorderPage> {
+class _ImagesEditPageState extends State<ImagesEditPage> {
   List<JointItem> items = [];
 
   @override
@@ -25,9 +25,6 @@ class _ImageReorderPageState extends State<ImageReorderPage> {
     items.addAll(widget.controller.items);
     super.initState();
   }
-
-  final _scrollController = ScrollController();
-  final _gridViewKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
