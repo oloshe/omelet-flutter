@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -10,6 +12,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:omelet/common/index.dart';
 import 'package:omelet/pages/image_joint/image_reorder_page.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
@@ -64,10 +67,6 @@ class _ImageJointPageState extends State<ImageJointPage> {
                     },
                     child: const Text('Save as Preset'),
                   ),
-                  PopupMenuItem(
-                    onTap: controller.clear,
-                    child: const Text('Clear Images'),
-                  ),
                 ],
               );
             },
@@ -115,10 +114,10 @@ class _ImageJointPageState extends State<ImageJointPage> {
                                 ),
                                 const SizedBox(width: 2),
                                 _BottomBtn(
-                                  icon: Icons.sort_rounded,
+                                  icon: Icons.list,
                                   onPressed: () =>
                                       showReorderPage(context, controller),
-                                  text: 'REORDER',
+                                  text: 'EDIT',
                                 ),
                                 const SizedBox(width: 2),
                                 _BottomBtn(
@@ -324,7 +323,9 @@ class _ImageJointPageState extends State<ImageJointPage> {
       await Permission.storage.request();
     }
     final img = await controller.export();
-    await ImageGallerySaver.saveImage(img);
+    final dir = await getTemporaryDirectory();
+    final file = await File('${dir.path}/${DateTime.now().millisecond}.png').writeAsBytes(img);
+    await ImageGallerySaver.saveFile(file.path);
     Fluttertoast.showToast(msg: 'Saved');
   }
 

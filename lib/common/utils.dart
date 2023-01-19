@@ -23,6 +23,7 @@ class Utils {
   static Future<bool?> toast(String msg) {
     return Fluttertoast.showToast(msg: msg);
   }
+
   /// 等待下一帧执行，通常用来规避build时同步执行setState导致的报错
   static Future<void> nextFrame() {
     Completer<void> completer = Completer();
@@ -30,6 +31,64 @@ class Utils {
       completer.complete();
     });
     return completer.future;
+  }
+
+  static Future<CroppedFile?> cropImage(String imgPath) async {
+    return await ImageCropper().cropImage(
+      sourcePath: imgPath,
+      compressQuality: 100,
+      aspectRatioPresets: [
+        CropAspectRatioPreset.square,
+        CropAspectRatioPreset.ratio3x2,
+        CropAspectRatioPreset.original,
+        CropAspectRatioPreset.ratio4x3,
+        CropAspectRatioPreset.ratio16x9
+      ],
+      uiSettings: [
+        AndroidUiSettings(
+          toolbarTitle: 'Cropper',
+          toolbarColor: Colors.black,
+          cropFrameColor: Colors.blue,
+          toolbarWidgetColor: Colors.white,
+          initAspectRatio: CropAspectRatioPreset.original,
+          lockAspectRatio: false,
+        ),
+        IOSUiSettings(
+          title: 'Cropper',
+        ),
+      ],
+    );
+  }
+
+  static Future<bool?> showConfirm({
+    String? title = 'Tips',
+    String? content = '',
+    String cancelText = 'Cancel',
+    String confirmText = 'Confirm',
+  }) {
+    return showDialog<bool>(
+      context: navigatorKey.currentContext!,
+      builder: (context) {
+        return AlertDialog(
+          title: title != null ? Text(title) : null,
+          content: content != null ? Text(content) : null,
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+              child: Text(cancelText, style: Ts.grey),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+              child: Text(confirmText),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 

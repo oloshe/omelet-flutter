@@ -1,10 +1,12 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:omelet/common/index.dart';
 
@@ -101,6 +103,18 @@ class ImageEditorPainterController with ChangeNotifier {
         'shadowElevation': shadowElevation,
       };
 
+  void merge(ImageEditorPainterController other) {
+    presetName = other.presetName;
+    isHorizontal = other.isHorizontal;
+    spacing = other.spacing;
+    padding = other.padding.copyWith();
+    bgColor = Color(other.bgColor.value);
+    shadowColor = Color(other.shadowColor.value);
+    radius = Radius.elliptical(other.radius.x, other.radius.y);
+    shadowOffset = Offset(other.shadowOffset.dx, other.shadowOffset.dy);
+    shadowElevation = other.shadowElevation;
+  }
+
   /// 宽度
   double getWidth() {
     if (items.isEmpty) {
@@ -138,7 +152,7 @@ class ImageEditorPainterController with ChangeNotifier {
   /// 总共的间隙
   double get totalSpacing => spacing * (items.length - 1);
 
-  _updateMaxImgSize() {
+  updateImagesChange() {
     if (items.isEmpty) {
       _maxImgWidth = 0;
       _maxImgHeight = 0;
@@ -150,21 +164,15 @@ class ImageEditorPainterController with ChangeNotifier {
 
   /// 添加一张图片
   void appendImage() async {
-    final picker = ImagePicker();
-    final ret = await picker.pickMultiImage();
-    for (var file in ret) {
-      final bytes = await file.readAsBytes();
-      final img = await ImageEditorPainter.loadImage(bytes);
-      items.add(JointItem.image(img, bytes, UniqueKey()));
-    }
-    _updateMaxImgSize();
+    items.addAll(await JointItem.getImages());
+    updateImagesChange();
     notifyListeners();
   }
 
   /// 清除所有
   clear() {
     items.clear();
-    _updateMaxImgSize();
+    updateImagesChange();
     notifyListeners();
     Fluttertoast.showToast(
       msg: 'Cleared',
@@ -211,7 +219,7 @@ class ImageEditorPainterController with ChangeNotifier {
 
   void applyNewList(List<JointItem> newList) {
     items = newList;
-    _updateMaxImgSize();
+    updateImagesChange();
     notifyListeners();
   }
 
@@ -290,11 +298,12 @@ class ImageEditorPainterController with ChangeNotifier {
             children: [
               const Text('Save your current setting to presets'),
               TextField(
-                  controller: TextEditingController(text: presetName),
-                  onChanged: (str) => presetName = str,
-                  decoration: const InputDecoration(
-                    labelText: 'Preset Name',
-                  )),
+                controller: TextEditingController(text: presetName),
+                onChanged: (str) => presetName = str,
+                decoration: const InputDecoration(
+                  labelText: 'Preset Name',
+                ),
+              ),
             ],
           ),
           actions: [
@@ -337,14 +346,34 @@ enum JointType {
 class JointItem {
   final JointType type;
   // image
-  final ui.Image? image;
-  final Uint8List? imageData;
+  ui.Image? image;
+  Uint8List? imageData;
+  String? imagePath;
 
   final Key key;
-  const JointItem.image(ui.Image img, Uint8List data, this.key)
+  JointItem.image(ui.Image img, Uint8List data, String? path, this.key)
       : image = img,
         imageData = data,
+        imagePath = path,
         type = JointType.image;
+
+  static Future<List<JointItem>> getImages() async {
+    final picker = ImagePicker();
+    final ret = await picker.pickMultiImage();
+    List<JointItem> result = [];
+    for (var file in ret) {
+      final bytes = await file.readAsBytes();
+      final img = await ImageEditorPainter.loadImage(bytes);
+      result.add(JointItem.image(img, bytes, file.path, UniqueKey()));
+    }
+    return result;
+  }
+
+  void changeCroppedImg(CroppedFile file) async {
+    imagePath = file.path;
+    imageData = await file.readAsBytes();
+    image = await ImageEditorPainter.loadImage(imageData!);
+  }
 
   int get height {
     switch (type) {
