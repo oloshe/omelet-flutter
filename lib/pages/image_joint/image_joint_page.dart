@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:image/image.dart' as img;
 import 'package:omelet/ext/index.dart';
 import 'package:omelet/pages/image_joint/image_args_page.dart';
 import 'package:omelet/pages/image_joint/image_editor_painter.dart';
@@ -55,7 +56,8 @@ class _ImageJointPageState extends State<ImageJointPage> {
                   PopupMenuItem(
                     onTap: () async {
                       SchedulerBinding.instance.addPostFrameCallback((_) async {
-                        final ImageEditorPainterController ctrl = await Navigator.of(context).push(
+                        final ImageEditorPainterController ctrl =
+                            await Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) {
                               return const ImageJointPresets();
@@ -331,10 +333,11 @@ class _ImageJointPageState extends State<ImageJointPage> {
     if (!status.isGranted) {
       await Permission.storage.request();
     }
-    final img = await controller.export();
+    final bytes = await controller.export();
+    final image = img.decodeImage(bytes)!;
     final dir = await getTemporaryDirectory();
-    final file = await File('${dir.path}/${DateTime.now().millisecond}.png')
-        .writeAsBytes(img);
+    final file = await File('${dir.path}/${DateTime.now().millisecond}.jpg')
+        .writeAsBytes(img.encodeJpg(image, quality: 95));
     await ImageGallerySaver.saveFile(file.path);
     Fluttertoast.showToast(msg: 'Saved');
   }

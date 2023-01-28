@@ -286,7 +286,6 @@ class _TopProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print(">> $percent");
     return Align(
       alignment: Alignment.topCenter,
       child: ColoredBox(
