@@ -1,5 +1,8 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:isolate';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -333,13 +336,28 @@ class _ImageJointPageState extends State<ImageJointPage> {
     if (!status.isGranted) {
       await Permission.storage.request();
     }
-    final bytes = await controller.export();
-    final image = img.decodeImage(bytes)!;
-    final dir = await getTemporaryDirectory();
-    final file = await File('${dir.path}/${DateTime.now().millisecond}.jpg')
-        .writeAsBytes(img.encodeJpg(image, quality: 95));
-    await ImageGallerySaver.saveFile(file.path);
+    print(123);
+    // await compute(computeSave, controller);
+    await computeSave(controller);
     Fluttertoast.showToast(msg: 'Saved');
+  }
+
+  static Future<void> computeSave(ImageEditorPainterController controller) async {
+    final stopwatch0 = Stopwatch()..start();
+    print('painting');
+    final stopwatch = Stopwatch()..start();
+    final bytes = await controller.export();
+    print('painted ${stopwatch.elapsed}');
+    final image = img.decodeImage(bytes)!;
+    final dir = (await getTemporaryDirectory()).path;
+    print('writing');
+    final name = DateTime.now().millisecond;
+    final stopwatch2 = Stopwatch()..start();
+    final file = await File('$dir/$name.jpg')
+        .writeAsBytes(img.encodeJpg(image, quality: 80));
+    print('wrote ${stopwatch2.elapsed}');
+    await ImageGallerySaver.saveFile(file.path);
+    print('total use ${stopwatch0.elapsed}');
   }
 
   // 显示切换背景

@@ -280,14 +280,21 @@ class ImageEditorPainterController with ChangeNotifier {
   }
 
   Future<Uint8List> export() async {
+    print("start record");
+    final stopwatch = Stopwatch()..start();
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
     final w = getWidth();
     final h = getHeight();
     paint(canvas, ui.Size(w, h));
     final pic = recorder.endRecording();
+    print("end record ${stopwatch.elapsed}");
+    final stopwatch2 = Stopwatch()..start();
     final img = await pic.toImage(w.toInt(), h.toInt());
+    print("toImage ${stopwatch2.elapsed}");
+    final stopwatch3 = Stopwatch()..start();
     final pngBytes = await img.toByteData(format: ui.ImageByteFormat.png);
+    print("toByteData ${stopwatch3.elapsed}");
     return Uint8List.view(pngBytes!.buffer);
   }
 
