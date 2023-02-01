@@ -33,14 +33,7 @@ class _ImageJointPresetsState extends State<ImageJointPresets> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Presets',
-          style: GoogleFonts.maShanZheng(
-            textStyle: const TextStyle(
-              fontSize: 24,
-            ),
-          ),
-        ),
+        title: const Text('Presets'),
       ),
       body: controllers.isNotEmpty
           ? Padding(

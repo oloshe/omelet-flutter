@@ -16,6 +16,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:omelet/common/index.dart';
 import 'package:omelet/pages/image_joint/image_joint_presets.dart';
+import 'package:omelet/pages/image_joint/image_joint_settings_page.dart';
 import 'package:omelet/pages/image_joint/images_edit_page.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -57,10 +58,22 @@ class _ImageJointPageState extends State<ImageJointPage> {
                 position: const RelativeRect.fromLTRB(1, 0, 0, 0),
                 items: <PopupMenuEntry>[
                   PopupMenuItem(
-                    onTap: () async {
-                      SchedulerBinding.instance.addPostFrameCallback((_) async {
+                    onTap: () {
+                      Utils.nextFrameCall(() async {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const ImageJointSettingsPage(),
+                          ),
+                        );
+                      });
+                    },
+                    child: const Text('Settings'),
+                  ),
+                  PopupMenuItem(
+                    onTap: () {
+                      Utils.nextFrameCall(() async {
                         final ImageEditorPainterController ctrl =
-                            await Navigator.of(context).push(
+                        await Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) {
                               return const ImageJointPresets();
@@ -79,7 +92,7 @@ class _ImageJointPageState extends State<ImageJointPage> {
                         controller.saveSetting(context);
                       });
                     },
-                    child: const Text('Save as Preset'),
+                    child: const Text('New Preset'),
                   ),
                 ],
               );
@@ -342,7 +355,8 @@ class _ImageJointPageState extends State<ImageJointPage> {
     Fluttertoast.showToast(msg: 'Saved');
   }
 
-  static Future<void> computeSave(ImageEditorPainterController controller) async {
+  static Future<void> computeSave(
+      ImageEditorPainterController controller) async {
     final stopwatch0 = Stopwatch()..start();
     print('painting');
     final stopwatch = Stopwatch()..start();

@@ -66,6 +66,7 @@ class ImageEditorPainterController with ChangeNotifier {
 
   double _maxImgWidth = 0;
   double _maxImgHeight = 0;
+  double scale = 0.5;
 
   ImageEditorPainterController();
 
@@ -85,7 +86,8 @@ class ImageEditorPainterController with ChangeNotifier {
       ..shadowColor = Color(json['shadowColor'])
       ..radius = Radius.elliptical(json['radiusX'], json['radiusY'])
       ..shadowOffset = Offset(json['shadowOffsetDx'], json['shadowOffsetDy'])
-      ..shadowElevation = json['shadowElevation'];
+      ..shadowElevation = json['shadowElevation']
+      ..scale = json['scale'];
   }
 
   Map<String, dynamic> toJson() => {
@@ -104,6 +106,7 @@ class ImageEditorPainterController with ChangeNotifier {
         'shadowOffsetDx': shadowOffset.dx,
         'shadowOffsetDy': shadowOffset.dy,
         'shadowElevation': shadowElevation,
+        'scale': scale,
       };
 
   void merge(ImageEditorPainterController other) {
@@ -117,6 +120,7 @@ class ImageEditorPainterController with ChangeNotifier {
     radius = Radius.elliptical(other.radius.x, other.radius.y);
     shadowOffset = Offset(other.shadowOffset.dx, other.shadowOffset.dy);
     shadowElevation = other.shadowElevation;
+    scale = other.scale;
     notifyListeners();
   }
 
@@ -128,8 +132,8 @@ class ImageEditorPainterController with ChangeNotifier {
     if (isHorizontal) {
       final dh = getHeight();
       final totalWidth = items.map((e) {
-        final scale = e.height / dh;
-        return e.width / scale;
+        final thisScale = e.height / dh;
+        return e.width / thisScale * scale;
       }).reduce((a, b) => a + b);
       return totalWidth + totalSpacing + padding.left + padding.right;
     } else {
@@ -147,8 +151,8 @@ class ImageEditorPainterController with ChangeNotifier {
     } else {
       final dw = getWidth() - padding.left - padding.right;
       final totalHeight = items.map((e) {
-        final scale = e.width / dw;
-        return e.height / scale;
+        final thisScale = e.width / dw;
+        return e.height / thisScale;
       }).reduce((a, b) => a + b);
       return totalHeight + totalSpacing + padding.top + padding.bottom;
     }
@@ -162,9 +166,22 @@ class ImageEditorPainterController with ChangeNotifier {
       _maxImgWidth = 0;
       _maxImgHeight = 0;
     } else {
-      _maxImgWidth = items.map((e) => e.width).reduce(max).toDouble();
-      _maxImgHeight = items.map((e) => e.height).reduce(max).toDouble();
+      _maxImgWidth = _getMaxWidth();
+      _maxImgHeight = _getMaxHeight();
     }
+  }
+
+  double _getMaxWidth() {
+    return items.map((e) => e.width * scale).reduce(max).toDouble();
+  }
+  double _getMaxHeight() {
+    return items.map((e) => e.height * scale).reduce(max).toDouble();
+  }
+
+  void setScale(double newScale) {
+    scale = newScale;
+    updateImagesChange();
+    notifyListeners();
   }
 
   /// 添加一张图片
@@ -252,26 +269,26 @@ class ImageEditorPainterController with ChangeNotifier {
     if (items.isEmpty) {
       return;
     }
-    double maxWidth = items.map((e) => e.width).reduce(max).toDouble();
-    double maxHeight = items.map((e) => e.height).reduce(max).toDouble();
+    double maxWidth = _getMaxWidth();
+    double maxHeight = _getMaxHeight();
     double currTop = padding.top;
     double currLeft = padding.left;
     final bgPaint = Paint()..color = bgColor;
     final bgRect = Rect.fromLTWH(0, 0, getWidth(), getHeight());
     canvas.drawRect(bgRect, bgPaint);
     for (var item in items) {
-      final w = item.width.toDouble();
-      final h = item.height.toDouble();
-      final Rect src = Rect.fromLTWH(0, 0, w, h);
+      final itemWidth = item.width.toDouble();
+      final itemHeight = item.height.toDouble();
+      final Rect src = Rect.fromLTWH(0, 0, itemWidth, itemHeight);
       late final Rect dest;
       if (isHorizontal) {
-        final scale = h / maxHeight;
-        final dw = w / scale;
+        final thisScale = itemHeight / maxHeight;
+        final dw = itemWidth / thisScale;
         dest = Rect.fromLTWH(currLeft, currTop, dw, maxHeight);
         currLeft += dw + spacing;
       } else {
-        final scale = w / maxWidth;
-        final dh = h / scale;
+        final thisScale = itemWidth / maxWidth;
+        final dh = itemHeight / thisScale;
         dest = Rect.fromLTWH(currLeft, currTop, maxWidth, dh);
         currTop += dh + spacing;
       }
@@ -305,7 +322,7 @@ class ImageEditorPainterController with ChangeNotifier {
         var oldName = presetName;
         var oldRemark = presetRemark;
         return AlertDialog(
-          title: const Text('Save as Preset'),
+          title: const Text('New Preset'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

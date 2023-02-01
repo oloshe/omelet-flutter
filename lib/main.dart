@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:omelet/pages/image_joint/image_joint_page.dart';
+import 'package:visual_console/visual_console.dart';
 
 import 'common/index.dart';
 
@@ -25,9 +27,15 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        appBarTheme: const AppBarTheme(
+        appBarTheme: AppBarTheme(
           color: Colors.yellow,
-          foregroundColor: Colors.black
+          foregroundColor: Colors.black,
+          titleTextStyle: GoogleFonts.maShanZheng(
+            textStyle: const TextStyle(
+              fontSize: 24,
+              color: Colors.black,
+            ),
+          ),
         ),
         // buttonTheme: const ButtonThemeData(
         //   buttonColor: Colors.blue,
@@ -43,6 +51,12 @@ class MyApp extends StatelessWidget {
       navigatorKey: Utils.navigatorKey,
       home: ScreenAdaptor(
         child: const ImageJointPage(),
+      ),
+      builder: (context, child) => Stack(
+        children: [
+          child!,
+          const Console(),
+        ],
       ),
     );
   }
