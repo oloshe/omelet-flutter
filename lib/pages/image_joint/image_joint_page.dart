@@ -60,11 +60,18 @@ class _ImageJointPageState extends State<ImageJointPage> {
                   PopupMenuItem(
                     onTap: () {
                       Utils.nextFrameCall(() async {
-                        Navigator.of(context).push(
+                        final oldPixelScale =
+                            ImageJointSettingData.instance.pixelScale;
+                        await Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (context) => const ImageJointSettingsPage(),
+                            builder: (context) =>
+                                const ImageJointSettingsPage(),
                           ),
                         );
+                        if (ImageJointSettingData.instance.pixelScale !=
+                            oldPixelScale) {
+                          controller.updateImagesChange();
+                        }
                       });
                     },
                     child: const Text('Settings'),
@@ -73,7 +80,7 @@ class _ImageJointPageState extends State<ImageJointPage> {
                     onTap: () {
                       Utils.nextFrameCall(() async {
                         final ImageEditorPainterController ctrl =
-                        await Navigator.of(context).push(
+                            await Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) {
                               return const ImageJointPresets();
@@ -358,20 +365,15 @@ class _ImageJointPageState extends State<ImageJointPage> {
   static Future<void> computeSave(
       ImageEditorPainterController controller) async {
     final stopwatch0 = Stopwatch()..start();
-    print('painting');
     final stopwatch = Stopwatch()..start();
     final bytes = await controller.export();
     print('painted ${stopwatch.elapsed}');
     final image = img.decodeImage(bytes)!;
-    final dir = (await getTemporaryDirectory()).path;
-    print('writing');
-    final name = DateTime.now().millisecond;
-    final stopwatch2 = Stopwatch()..start();
-    final file = await File('$dir/$name.jpg')
-        .writeAsBytes(img.encodeJpg(image, quality: 80));
-    print('wrote ${stopwatch2.elapsed}');
-    await ImageGallerySaver.saveFile(file.path);
-    print('total use ${stopwatch0.elapsed}');
+    final file = await ImageJointSettingData.instance.encodeFile(image);
+    if (file != null) {
+      await ImageGallerySaver.saveFile(file.path);
+      print('total use ${stopwatch0.elapsed}');
+    }
   }
 
   // 显示切换背景

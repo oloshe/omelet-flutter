@@ -8,6 +8,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:omelet/common/index.dart';
+import 'package:omelet/pages/image_joint/image_joint_settings_page.dart';
 
 class ImageEditorPainter extends CustomPainter {
   ImageEditorPainterController controller;
@@ -66,7 +67,8 @@ class ImageEditorPainterController with ChangeNotifier {
 
   double _maxImgWidth = 0;
   double _maxImgHeight = 0;
-  double scale = 0.5;
+
+  double get scale => ImageJointSettingData.instance.pixelScale;
 
   ImageEditorPainterController();
 
@@ -86,8 +88,7 @@ class ImageEditorPainterController with ChangeNotifier {
       ..shadowColor = Color(json['shadowColor'])
       ..radius = Radius.elliptical(json['radiusX'], json['radiusY'])
       ..shadowOffset = Offset(json['shadowOffsetDx'], json['shadowOffsetDy'])
-      ..shadowElevation = json['shadowElevation']
-      ..scale = json['scale'];
+      ..shadowElevation = json['shadowElevation'];
   }
 
   Map<String, dynamic> toJson() => {
@@ -106,7 +107,6 @@ class ImageEditorPainterController with ChangeNotifier {
         'shadowOffsetDx': shadowOffset.dx,
         'shadowOffsetDy': shadowOffset.dy,
         'shadowElevation': shadowElevation,
-        'scale': scale,
       };
 
   void merge(ImageEditorPainterController other) {
@@ -120,7 +120,6 @@ class ImageEditorPainterController with ChangeNotifier {
     radius = Radius.elliptical(other.radius.x, other.radius.y);
     shadowOffset = Offset(other.shadowOffset.dx, other.shadowOffset.dy);
     shadowElevation = other.shadowElevation;
-    scale = other.scale;
     notifyListeners();
   }
 
@@ -169,6 +168,7 @@ class ImageEditorPainterController with ChangeNotifier {
       _maxImgWidth = _getMaxWidth();
       _maxImgHeight = _getMaxHeight();
     }
+    notifyListeners();
   }
 
   double _getMaxWidth() {
@@ -178,24 +178,16 @@ class ImageEditorPainterController with ChangeNotifier {
     return items.map((e) => e.height * scale).reduce(max).toDouble();
   }
 
-  void setScale(double newScale) {
-    scale = newScale;
-    updateImagesChange();
-    notifyListeners();
-  }
-
   /// 添加一张图片
   void appendImage() async {
     items.addAll(await JointItem.getImages());
     updateImagesChange();
-    notifyListeners();
   }
 
   /// 清除所有
   clear() {
     items.clear();
     updateImagesChange();
-    notifyListeners();
     Fluttertoast.showToast(
       msg: 'Cleared',
     );
@@ -242,7 +234,6 @@ class ImageEditorPainterController with ChangeNotifier {
   void applyNewList(List<JointItem> newList) {
     items = newList;
     updateImagesChange();
-    notifyListeners();
   }
 
   void setShadowElevation(double newVal) {
@@ -297,18 +288,13 @@ class ImageEditorPainterController with ChangeNotifier {
   }
 
   Future<Uint8List> export() async {
-    print("start record");
-    final stopwatch = Stopwatch()..start();
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
     final w = getWidth();
     final h = getHeight();
     paint(canvas, ui.Size(w, h));
     final pic = recorder.endRecording();
-    print("end record ${stopwatch.elapsed}");
-    final stopwatch2 = Stopwatch()..start();
     final img = await pic.toImage(w.toInt(), h.toInt());
-    print("toImage ${stopwatch2.elapsed}");
     final stopwatch3 = Stopwatch()..start();
     final pngBytes = await img.toByteData(format: ui.ImageByteFormat.png);
     print("toByteData ${stopwatch3.elapsed}");

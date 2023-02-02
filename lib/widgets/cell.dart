@@ -55,7 +55,7 @@ class Cell extends StatelessWidget {
   Widget build(BuildContext context) {
     final padding_ = padding ??
         const EdgeInsets.symmetric(
-          horizontal: 20,
+          horizontal: 10,
           vertical: 10,
         );
     Widget result = Padding(
@@ -81,9 +81,9 @@ class Cell extends StatelessWidget {
           if (trailing != null) trailing!,
           if (arrow && arrowLeft != null) SizedBox(width: arrowLeft),
           if (arrow)
-            const Icon(
+            Icon(
               Icons.arrow_forward_ios_outlined,
-              color: Color(0xFF7368e0),
+              color: Colors.grey.shade400,
               size: 16,
             ),
         ],
