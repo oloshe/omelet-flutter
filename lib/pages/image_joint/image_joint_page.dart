@@ -21,6 +21,7 @@ import 'package:omelet/pages/image_joint/images_edit_page.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:tuple/tuple.dart';
 
 typedef _ImageArgData = ImageArgData<ImageEditorPainterController, String>;
 
@@ -511,36 +512,44 @@ class ImageJointMainViewer extends StatelessWidget {
       height: viewerHeight,
       width: double.infinity,
       child: Center(
-        child: SingleChildScrollView(
+        child: Selector<ImageEditorPainterController, bool>(
+          selector: (_, controller) => controller.isHorizontal,
+          builder: (_, isHorizontal, child) {
+            return SingleChildScrollView(
+              scrollDirection: isHorizontal ? Axis.horizontal : Axis.vertical,
+              child: child,
+            );
+          },
           child: ColoredBox(
             color: Colors.grey.shade400,
             child: Center(
-              child: Selector<ImageEditorPainterController, ui.Size>(
+              child: Selector<ImageEditorPainterController, Tuple2<ui.Size, bool>>(
                 selector: (_, controller) {
-                  return ui.Size(controller.getWidth(), controller.getHeight());
+                  return Tuple2(ui.Size(controller.getWidth(), controller.getHeight()), controller.isHorizontal,);
                 },
-                builder: (context, value, child) {
-                  if (value.width == 0 || value.height == 0) {
+                builder: (context, tuple, child) {
+                  final size = tuple.item1;
+                  final isHorizontal = tuple.item2;
+                  if (size.width == 0 || size.height == 0) {
                     return const SizedBox.shrink();
                   }
                   final double scale = (() {
                     // final isHorizontal = value.width > value.height;
                     // final viewerFactor = viewerWidth / viewerHeight;
                     // final imgFactor = value.width / value.height; // 值越大，越扁
-                    final scaleW = viewerWidth / value.width;
-                    final scaleH = viewerHeight / value.height;
+                    final scaleW = viewerWidth / size.width;
+                    final scaleH = viewerHeight / size.height;
                     // print("viewer: $viewerFactor, $imgFactor $fitScreen");
                     if (fitScreen) {
-                      // 是否适应屏幕
-                      if (scaleH * value.width > viewerWidth) {
-                        return scaleW;
+                      if (isHorizontal) {
+                        return scaleH;
+                      } else {
+                        // 是否适应屏幕，否则是居中
+                        if (scaleH * size.width > viewerWidth) {
+                          return scaleW;
+                        }
+                        return scaleH;
                       }
-                      return scaleH;
-                      // if (viewerFactor < img   Factor) {
-                      //   return scaleW;
-                      // } else {
-                      //   return scaleW;
-                      // }
                     } else {
                       return scaleW;
                     }
@@ -551,7 +560,7 @@ class ImageJointMainViewer extends StatelessWidget {
                     origin: Offset.zero,
                     alignment: Alignment.topLeft,
                     child: CustomPaint(
-                      size: value * scale,
+                      size: size * scale,
                       painter: ImageEditorPainter(
                         controller: controller,
                       ),

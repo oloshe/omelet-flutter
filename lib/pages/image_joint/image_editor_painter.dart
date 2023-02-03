@@ -35,14 +35,15 @@ class ImageEditorPainter extends CustomPainter {
 
 class ImageEditorPainterController with ChangeNotifier {
   List<JointItem> items = [];
-
+  // =====================【预设】========================
   /// 预设名字
   String presetName = 'Unnamed Preset';
   /// 预设备注
   String presetRemark = '';
+  // ====================================================
 
   /// 是否是水平
-  bool isHorizontal = false;
+  bool isHorizontal = true;
 
   /// 间隔
   double spacing = 0;
