@@ -29,7 +29,6 @@ class _ImagesEditPageState extends State<ImagesEditPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
         title: Text(
           'Images Edit',
           style: GoogleFonts.maShanZheng(

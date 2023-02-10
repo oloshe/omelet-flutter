@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:omelet/common/index.dart';
@@ -38,12 +40,16 @@ class ImageEditorPainterController with ChangeNotifier {
   // =====================【预设】========================
   /// 预设名字
   String presetName = 'Unnamed Preset';
+
   /// 预设备注
   String presetRemark = '';
   // ====================================================
 
+  String title = 'Hello Omelet';
+  Color titleColor = Colors.black;
+
   /// 是否是水平
-  bool isHorizontal = true;
+  bool isHorizontal = false;
 
   /// 间隔
   double spacing = 0;
@@ -66,9 +72,13 @@ class ImageEditorPainterController with ChangeNotifier {
   /// 阴影颜色
   Color shadowColor = Colors.black;
 
+  /// 最宽的图片宽度
   double _maxImgWidth = 0;
+
+  /// 最长的图片长度
   double _maxImgHeight = 0;
 
+  /// 缩放，0.5就是把像素缩小一倍
   double get scale => ImageJointSettingData.instance.pixelScale;
 
   ImageEditorPainterController();
@@ -130,10 +140,10 @@ class ImageEditorPainterController with ChangeNotifier {
       return 0;
     }
     if (isHorizontal) {
-      final dh = getHeight();
+      final dh = getHeight() - padding.top - padding.bottom;
       final totalWidth = items.map((e) {
-        final thisScale = e.height / dh;
-        return e.width / thisScale * scale;
+        final thisScale = e.itemHeight / dh;
+        return e.itemWidth / thisScale;
       }).reduce((a, b) => a + b);
       return totalWidth + totalSpacing + padding.left + padding.right;
     } else {
@@ -147,12 +157,12 @@ class ImageEditorPainterController with ChangeNotifier {
       return 0;
     }
     if (isHorizontal) {
-      return _maxImgHeight;
+      return _maxImgHeight + padding.top + padding.bottom;
     } else {
       final dw = getWidth() - padding.left - padding.right;
       final totalHeight = items.map((e) {
-        final thisScale = e.width / dw;
-        return e.height / thisScale;
+        final thisScale = e.itemWidth / dw;
+        return e.itemHeight / thisScale;
       }).reduce((a, b) => a + b);
       return totalHeight + totalSpacing + padding.top + padding.bottom;
     }
@@ -173,10 +183,11 @@ class ImageEditorPainterController with ChangeNotifier {
   }
 
   double _getMaxWidth() {
-    return items.map((e) => e.width * scale).reduce(max).toDouble();
+    return items.map((e) => e.itemWidth * scale).reduce(max).toDouble();
   }
+
   double _getMaxHeight() {
-    return items.map((e) => e.height * scale).reduce(max).toDouble();
+    return items.map((e) => e.itemHeight * scale).reduce(max).toDouble();
   }
 
   /// 添加一张图片
@@ -263,14 +274,44 @@ class ImageEditorPainterController with ChangeNotifier {
     }
     double maxWidth = _getMaxWidth();
     double maxHeight = _getMaxHeight();
+    double viewportWidth = getWidth();
+    double viewportHeight = getHeight();
     double currTop = padding.top;
     double currLeft = padding.left;
     final bgPaint = Paint()..color = bgColor;
     final bgRect = Rect.fromLTWH(0, 0, getWidth(), getHeight());
     canvas.drawRect(bgRect, bgPaint);
+
+    // final textSpan = TextSpan(
+    //   text: title,
+    //   style: GoogleFonts.maShanZheng(
+    //     textStyle: const TextStyle(
+    //       fontSize: 300,
+    //       color: Colors.black,
+    //       height: 1,
+    //     ),
+    //   ),
+    // );
+    // final textPainter = TextPainter(
+    //   text: textSpan,
+    //   textDirection: TextDirection.ltr,
+    //   textAlign: TextAlign.center,
+    // );
+    // textPainter.layout(
+    //   maxWidth: viewportWidth,
+    // );
+    // Offset titleOffset;
+    // if (isHorizontal) {
+    //   titleOffset = Offset(currLeft, (viewportHeight - textPainter.height) / 2);
+    //   currLeft += textPainter.width + spacing;
+    // } else {
+    //   titleOffset = Offset((viewportWidth - textPainter.width) / 2, 100);
+    // }
+    // textPainter.paint(canvas, titleOffset);
+
     for (var item in items) {
-      final itemWidth = item.width.toDouble();
-      final itemHeight = item.height.toDouble();
+      final itemWidth = item.itemWidth.toDouble();
+      final itemHeight = item.itemHeight.toDouble();
       final Rect src = Rect.fromLTWH(0, 0, itemWidth, itemHeight);
       late final Rect dest;
       if (isHorizontal) {
@@ -366,6 +407,7 @@ class ImageEditorPainterController with ChangeNotifier {
 
 enum JointType {
   image,
+  title,
 }
 
 class JointItem {
@@ -375,12 +417,25 @@ class JointItem {
   Uint8List? imageData;
   String? imagePath;
 
-  final Key key;
-  JointItem.image(ui.Image img, Uint8List data, String? path, this.key)
-      : image = img,
-        imageData = data,
-        imagePath = path,
-        type = JointType.image;
+  // title
+  String? textStr;
+  Color? textColor;
+  double? textWidth;
+  double? textHeight;
+  double? fontSize;
+
+  final Key key = UniqueKey();
+  JointItem.image(
+      ui.Image this.image, Uint8List this.imageData, String this.imagePath)
+      : type = JointType.image;
+
+  JointItem.title(
+    String this.textStr,
+    Color this.textColor,
+    double this.textWidth,
+    double this.textHeight,
+    double this.fontSize,
+  ) : type = JointType.title;
 
   static Future<List<JointItem>> getImages() async {
     final picker = ImagePicker();
@@ -389,7 +444,7 @@ class JointItem {
     for (var file in ret) {
       final bytes = await file.readAsBytes();
       final img = await ImageEditorPainter.loadImage(bytes);
-      result.add(JointItem.image(img, bytes, file.path, UniqueKey()));
+      result.add(JointItem.image(img, bytes, file.path));
     }
     return result;
   }
@@ -400,21 +455,21 @@ class JointItem {
     image = await ImageEditorPainter.loadImage(imageData!);
   }
 
-  int get height {
+  int get itemHeight {
     switch (type) {
       case JointType.image:
-        {
-          return image!.height;
-        }
+        return image!.height;
+      case JointType.title:
+        return textHeight!.toInt();
     }
   }
 
-  int get width {
+  int get itemWidth {
     switch (type) {
       case JointType.image:
-        {
-          return image!.width;
-        }
+        return image!.width;
+      case JointType.title:
+        return textWidth!.toInt();
     }
   }
 

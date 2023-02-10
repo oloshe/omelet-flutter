@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:omelet/common/index.dart';
+import 'package:omelet/pages/image_joint/Image_joint_main_viewer.dart';
 import 'package:omelet/pages/image_joint/image_editor_painter.dart';
 import 'package:omelet/pages/image_joint/image_joint_page.dart';
 import 'package:omelet/widgets/cell.dart';

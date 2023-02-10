@@ -1,11 +1,10 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:omelet/pages/image_joint/image_editor_painter.dart';
 import 'package:omelet/widgets/cell.dart';
 
-import '../../common/index.dart';
+import 'package:omelet/common/index.dart';
 
 class ImageJointPresets extends StatefulWidget {
   const ImageJointPresets({Key? key}) : super(key: key);

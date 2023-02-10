@@ -8,6 +8,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image/image.dart' as img;
 import 'package:omelet/ext/index.dart';
+import 'package:omelet/pages/image_joint/Image_joint_main_viewer.dart';
 import 'package:omelet/pages/image_joint/image_args_page.dart';
 import 'package:omelet/pages/image_joint/image_editor_painter.dart';
 import 'dart:ui' as ui;
@@ -18,6 +19,7 @@ import 'package:omelet/common/index.dart';
 import 'package:omelet/pages/image_joint/image_joint_presets.dart';
 import 'package:omelet/pages/image_joint/image_joint_settings_page.dart';
 import 'package:omelet/pages/image_joint/images_edit_page.dart';
+import 'package:omelet/pages/image_joint/text_item_editor.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
@@ -176,6 +178,15 @@ class _ImageJointPageState extends State<ImageJointPage> {
                                     controller,
                                   ),
                                   text: 'COLOR',
+                                ),
+                                const SizedBox(width: 2),
+                                _BottomBtn(
+                                  icon: Icons.title_rounded,
+                                  onPressed: () => showTextEditor(
+                                    context,
+                                    controller,
+                                  ),
+                                  text: 'ADD TITLE',
                                 ),
                               ],
                             ),
@@ -491,87 +502,16 @@ class _ImageJointPageState extends State<ImageJointPage> {
       },
     );
   }
-}
 
-class ImageJointMainViewer extends StatelessWidget {
-  const ImageJointMainViewer({
-    Key? key,
-    required this.viewerHeight,
-    required this.controller,
-    this.fitScreen = false,
-  }) : super(key: key);
-
-  final double viewerHeight;
-  final ImageEditorPainterController controller;
-  final bool fitScreen;
-
-  @override
-  Widget build(BuildContext context) {
-    final viewerWidth = ScreenAdaptor.screenWidth;
-    return SizedBox(
-      height: viewerHeight,
-      width: double.infinity,
-      child: Center(
-        child: Selector<ImageEditorPainterController, bool>(
-          selector: (_, controller) => controller.isHorizontal,
-          builder: (_, isHorizontal, child) {
-            return SingleChildScrollView(
-              scrollDirection: isHorizontal ? Axis.horizontal : Axis.vertical,
-              child: child,
-            );
-          },
-          child: ColoredBox(
-            color: Colors.grey.shade400,
-            child: Center(
-              child: Selector<ImageEditorPainterController, Tuple2<ui.Size, bool>>(
-                selector: (_, controller) {
-                  return Tuple2(ui.Size(controller.getWidth(), controller.getHeight()), controller.isHorizontal,);
-                },
-                builder: (context, tuple, child) {
-                  final size = tuple.item1;
-                  final isHorizontal = tuple.item2;
-                  if (size.width == 0 || size.height == 0) {
-                    return const SizedBox.shrink();
-                  }
-                  final double scale = (() {
-                    // final isHorizontal = value.width > value.height;
-                    // final viewerFactor = viewerWidth / viewerHeight;
-                    // final imgFactor = value.width / value.height; // 值越大，越扁
-                    final scaleW = viewerWidth / size.width;
-                    final scaleH = viewerHeight / size.height;
-                    // print("viewer: $viewerFactor, $imgFactor $fitScreen");
-                    if (fitScreen) {
-                      if (isHorizontal) {
-                        return scaleH;
-                      } else {
-                        // 是否适应屏幕，否则是居中
-                        if (scaleH * size.width > viewerWidth) {
-                          return scaleW;
-                        }
-                        return scaleH;
-                      }
-                    } else {
-                      return scaleW;
-                    }
-                  })();
-
-                  return Transform.scale(
-                    scale: scale,
-                    origin: Offset.zero,
-                    alignment: Alignment.topLeft,
-                    child: CustomPaint(
-                      size: size * scale,
-                      painter: ImageEditorPainter(
-                        controller: controller,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-        ),
-      ),
+  void showTextEditor(
+    BuildContext context,
+    ImageEditorPainterController controller,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return const TextItemEditor();
+      },
     );
   }
 }
