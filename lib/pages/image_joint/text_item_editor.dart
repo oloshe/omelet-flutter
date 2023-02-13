@@ -1,123 +1,128 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:omelet/common/index.dart';
+import 'package:omelet/pages/image_joint/image_editor_painter.dart';
+import 'package:omelet/pages/image_joint/joint_item.dart';
+import 'package:omelet/widgets/cell.dart';
+import 'package:provider/provider.dart';
 
 class TextItemEditor extends StatefulWidget {
-  const TextItemEditor({Key? key}) : super(key: key);
+  final Joint2Text? itemValue;
+  const TextItemEditor({Key? key, this.itemValue}) : super(key: key);
 
   @override
   State<TextItemEditor> createState() => _TextItemEditorState();
 }
 
 class _TextItemEditorState extends State<TextItemEditor> {
+  late final Joint2Text data;
+
+  late final state = VM(data);
+
+  @override
+  void initState() {
+    data = widget.itemValue ??
+        Joint2Text(
+          textStr: '',
+          textColor: Colors.black,
+          textHeight: 200,
+          textWidth: 200,
+          fontSize: JointTextSize.middle,
+        );
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      content: Container(
-        width: 300,
-        height: 300,
-        child: Column(
-          children: [
-            Container(
-              width: double.infinity,
-              height: 100,
-              color: Colors.green,
-              child: CustomPaint(
-                painter: TextItemPainter(TextItemData(
-                  'Test',
-                  Colors.black,
-                )),
-              ),
-            ),
-            TextField(
-              decoration: InputDecoration(
-                hintText: "Enter text here",
-              ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "Text size",
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  "Text color",
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                DropdownButton<int>(
-                  items: [
-                    DropdownMenuItem(
-                      child: Text("12"),
-                      value: 12,
-                    ),
-                    DropdownMenuItem(
-                      child: Text("14"),
-                      value: 14,
-                    ),
-                    DropdownMenuItem(
-                      child: Text("16"),
-                      value: 16,
-                    ),
-                  ],
-                  onChanged: (value) {
-                    // do something with the selected text size
+    return ChangeNotifierProvider.value(
+      value: state,
+      builder: (context, child) => AlertDialog(
+        content: SizedBox(
+          width: 300,
+          height: 300,
+          child: Column(
+            children: [
+              Container(
+                width: double.infinity,
+                height: 60,
+                color: Colors.grey.shade300,
+                child: VMSelector<Joint2Text, String>(
+                  selector: (_, s) => s.value.textStr,
+                  builder: (context, str, child) {
+                    return CustomPaint(
+                      painter: TextItemPainter(
+                        TextItemData(str, Colors.black),
+                      ),
+                    );
                   },
                 ),
-                DropdownButton<Color>(
-                  items: [
-                    DropdownMenuItem(
-                      child: Container(
-                        width: 20,
-                        height: 20,
-                        color: Colors.red,
-                      ),
-                      value: Colors.red,
-                    ),
-                    DropdownMenuItem(
-                      child: Container(
-                        width: 20,
-                        height: 20,
-                        color: Colors.blue,
-                      ),
-                      value: Colors.blue,
-                    ),
-                    DropdownMenuItem(
-                      child: Container(
-                        width: 20,
-                        height: 20,
-                        color: Colors.green,
-                      ),
-                      value: Colors.green,
-                    ),
-                  ],
-                  onChanged: (value) {
-                    // do something with the selected text color
-                  },
+              ),
+              const SizedBox(height: 5),
+              TextField(
+                decoration: const InputDecoration(
+                  hintText: "Enter text here",
+                  labelStyle: Ts.s8,
                 ),
-              ],
-            ),
-          ],
+                style: Ts.s12,
+                onChanged: (str) {
+                  state.value.textStr = str;
+                  state.forceUpdate();
+                },
+              ),
+              const SizedBox(height: 5),
+              Cell(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                leading: const Text("Text Size"),
+                trailing: VMSelector<Joint2Text, JointTextSize?>(
+                  selector: (_, s) => s.value.fontSize,
+                  builder: (_, fontSize, child) =>
+                      DropdownButton<JointTextSize>(
+                    items: JointTextSize.values
+                        .map((e) => DropdownMenuItem(
+                              value: e,
+                              child: Text(e.toShortString()),
+                            ))
+                        .toList(growable: false),
+                    value: fontSize,
+                    onChanged: (value) {
+                      if (value != null) {
+                        state.value.fontSize = value;
+                        state.forceUpdate();
+                      }
+                    },
+                  ),
+                ),
+              ),
+              Cell(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                leading: const Text("Text Color"),
+                trailing: VMSelector<Joint2Text, Color>(
+                  selector: (_, s) => s.value.textColor,
+                  builder: (_, color, child) => Container(
+                    width: 24,
+                    height: 24,
+                    color: color,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
+        actions: [
+          ElevatedButton(
+            child: const Text("Cancel"),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          ElevatedButton(
+            child: const Text("Confirm"),
+            onPressed: () {
+              Navigator.of(context).pop(data.textStr!.isEmpty ? null : data);
+            },
+          ),
+        ],
       ),
-      actions: [
-        ElevatedButton(
-          child: Text("Cancel"),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-        ElevatedButton(
-          child: Text("Confirm"),
-          onPressed: () {
-            // onTap function goes here
-          },
-        ),
-      ],
     );
   }
 }
@@ -146,7 +151,10 @@ class TextItemPainter extends CustomPainter {
     textPainter.layout(
       maxWidth: size.width,
     );
-    textPainter.paint(canvas, Offset((size.width - textPainter.width) / 2, (size.height - textPainter.height) / 2));
+    textPainter.paint(
+        canvas,
+        Offset((size.width - textPainter.width) / 2,
+            (size.height - textPainter.height) / 2));
     // textPainter.paint(canvas, Offset(0, 0));
   }
 

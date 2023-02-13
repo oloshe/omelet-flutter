@@ -1,10 +1,10 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:omelet/common/index.dart';
 
 import 'package:omelet/pages/image_joint/image_editor_painter.dart';
+import 'package:omelet/pages/image_joint/joint_item.dart';
 import 'package:omelet/widgets/cell.dart';
 import 'package:reorderables/reorderables.dart';
 
@@ -17,7 +17,7 @@ class ImagesEditPage extends StatefulWidget {
 }
 
 class _ImagesEditPageState extends State<ImagesEditPage> {
-  List<JointItem> items = [];
+  List<JointItem2> items = [];
 
   @override
   void initState() {
@@ -40,11 +40,12 @@ class _ImagesEditPageState extends State<ImagesEditPage> {
         actions: [
           IconButton(
             onPressed: () async {
-              if (items.isEmpty) { return; }
+              if (items.isEmpty) {
+                return;
+              }
               final result = await Utils.showConfirm(
-                title: 'Delete All',
-                content: 'Are you sure to clear all images?'
-              );
+                  title: 'Delete All',
+                  content: 'Are you sure to clear all images?');
               if (result == true) {
                 widget.controller.clear();
                 Utils.toast('Clear');
@@ -55,7 +56,7 @@ class _ImagesEditPageState extends State<ImagesEditPage> {
           ),
           IconButton(
             onPressed: () async {
-              final list = await JointItem.getImages();
+              final list = await Joint2Image.getImages();
               setState(() {
                 items.addAll(list);
               });
@@ -90,45 +91,39 @@ class _ImagesEditPageState extends State<ImagesEditPage> {
               // color: Colors.grey.shade200,
               // borderRadius: BorderRadius.circular(radius),
               divider: const Divider(height: 1),
-              leading: ColoredBox(
-                color: Colors.black,
-                child: Image.memory(
-                  item.imageData!,
-                  width: 60,
-                  height: 60,
-                ),
-              ),
+              leading: item.thumbnail(),
               title: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${item.image!.width} X ${item.image!.height}',
+                    '${item.getWidth()} X ${item.getHeight()}',
                     style: Ts.s10,
                   ),
                 ],
               ),
               trailing: Row(
                 children: [
-                  IconButton(
-                    onPressed: () async {
-                      final croppedFile =
-                          await Utils.cropImage(item.imagePath!);
-                      if (croppedFile != null) {
-                        setState(() {
-                          item.changeCroppedImg(croppedFile);
-                        });
-                      }
-                    },
-                    icon: const Icon(Icons.crop_rounded),
-                  ),
-                  const SizedBox(width: 20),
+                  if (item is Joint2Image)
+                    IconButton(
+                      onPressed: () async {
+                        final croppedFile =
+                            await Utils.cropImage(item.imagePath!);
+                        if (croppedFile != null) {
+                          setState(() {
+                            item.changeCroppedImg(croppedFile);
+                          });
+                        }
+                      },
+                      icon: const Icon(Icons.crop_rounded),
+                    ),
+                  if (item is Joint2Image) const SizedBox(width: 20),
                   const Icon(Icons.reorder_rounded, color: Colors.grey),
                 ],
               ),
               onTap: () async {
                 await _previewImage(
                   context,
-                  items,
+                  items.whereType<Joint2Image>().toList(growable: false),
                   index,
                   onDeleted: () {
                     setState(() {
@@ -153,7 +148,7 @@ class _ImagesEditPageState extends State<ImagesEditPage> {
 /// 预览图片，返回是否删除
 Future<void> _previewImage(
   BuildContext context,
-  List<JointItem> images,
+  List<Joint2Image> images,
   int initialIndex, {
   VoidCallback? onDeleted,
   void Function(CroppedFile)? onEdited,
@@ -176,7 +171,7 @@ Future<void> _previewImage(
                         alignment: Alignment.center,
                         children: [
                           Image.memory(
-                            images[index].imageData!,
+                            images[index].imageData,
                           ),
                         ],
                       ),
@@ -203,7 +198,7 @@ Future<void> _previewImage(
                           IconButton(
                             onPressed: () async {
                               final croppedFile = await Utils.cropImage(
-                                  images[index].imagePath!);
+                                  images[index].imagePath);
                               if (croppedFile != null) {
                                 setState(() {
                                   images[index].changeCroppedImg(croppedFile);

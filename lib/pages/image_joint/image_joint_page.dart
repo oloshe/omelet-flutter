@@ -19,6 +19,7 @@ import 'package:omelet/common/index.dart';
 import 'package:omelet/pages/image_joint/image_joint_presets.dart';
 import 'package:omelet/pages/image_joint/image_joint_settings_page.dart';
 import 'package:omelet/pages/image_joint/images_edit_page.dart';
+import 'package:omelet/pages/image_joint/joint_item.dart';
 import 'package:omelet/pages/image_joint/text_item_editor.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -129,6 +130,7 @@ class _ImageJointPageState extends State<ImageJointPage> {
                   ),
                   SizedBox(
                     height: tabHeight,
+                    width: double.infinity,
                     child: ColoredBox(
                       color: Colors.grey.shade100,
                       child: Padding(
@@ -506,13 +508,14 @@ class _ImageJointPageState extends State<ImageJointPage> {
   void showTextEditor(
     BuildContext context,
     ImageEditorPainterController controller,
-  ) {
-    showDialog(
+  ) async {
+    final data = await showDialog<Joint2Text>(
       context: context,
-      builder: (context) {
-        return const TextItemEditor();
-      },
+      builder: (_) => const TextItemEditor(),
     );
+    if (data != null) {
+      controller.appendTextItem(data);
+    }
   }
 }
 

@@ -11,6 +11,7 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:omelet/common/index.dart';
 import 'package:omelet/pages/image_joint/image_joint_settings_page.dart';
+import 'package:omelet/pages/image_joint/joint_item.dart';
 
 class ImageEditorPainter extends CustomPainter {
   ImageEditorPainterController controller;
@@ -36,7 +37,7 @@ class ImageEditorPainter extends CustomPainter {
 }
 
 class ImageEditorPainterController with ChangeNotifier {
-  List<JointItem> items = [];
+  List<JointItem2> items = [];
   // =====================【预设】========================
   /// 预设名字
   String presetName = 'Unnamed Preset';
@@ -142,8 +143,8 @@ class ImageEditorPainterController with ChangeNotifier {
     if (isHorizontal) {
       final dh = getHeight() - padding.top - padding.bottom;
       final totalWidth = items.map((e) {
-        final thisScale = e.itemHeight / dh;
-        return e.itemWidth / thisScale;
+        final thisScale = e.getHeight() / dh;
+        return e.getWidth() / thisScale;
       }).reduce((a, b) => a + b);
       return totalWidth + totalSpacing + padding.left + padding.right;
     } else {
@@ -161,8 +162,8 @@ class ImageEditorPainterController with ChangeNotifier {
     } else {
       final dw = getWidth() - padding.left - padding.right;
       final totalHeight = items.map((e) {
-        final thisScale = e.itemWidth / dw;
-        return e.itemHeight / thisScale;
+        final thisScale = e.getWidth() / dw;
+        return e.getHeight() / thisScale;
       }).reduce((a, b) => a + b);
       return totalHeight + totalSpacing + padding.top + padding.bottom;
     }
@@ -183,16 +184,22 @@ class ImageEditorPainterController with ChangeNotifier {
   }
 
   double _getMaxWidth() {
-    return items.map((e) => e.itemWidth * scale).reduce(max).toDouble();
+    return items.map((e) => e.getWidth() * scale).reduce(max).toDouble();
   }
 
   double _getMaxHeight() {
-    return items.map((e) => e.itemHeight * scale).reduce(max).toDouble();
+    return items.map((e) => e.getHeight() * scale).reduce(max).toDouble();
   }
 
   /// 添加一张图片
   void appendImage() async {
-    items.addAll(await JointItem.getImages());
+    items.addAll(await Joint2Image.getImages());
+    updateImagesChange();
+  }
+
+  void appendTextItem(Joint2Text data) async {
+    assert(data.type == JointType.text);
+    items.add(data);
     updateImagesChange();
   }
 
@@ -243,7 +250,7 @@ class ImageEditorPainterController with ChangeNotifier {
     notifyListeners();
   }
 
-  void applyNewList(List<JointItem> newList) {
+  void applyNewList(List<JointItem2> newList) {
     items = newList;
     updateImagesChange();
   }
@@ -274,10 +281,12 @@ class ImageEditorPainterController with ChangeNotifier {
     }
     double maxWidth = _getMaxWidth();
     double maxHeight = _getMaxHeight();
+    Size maxSize = Size(maxWidth, maxHeight);
     double viewportWidth = getWidth();
     double viewportHeight = getHeight();
-    double currTop = padding.top;
-    double currLeft = padding.left;
+    Offset currPos = Offset(padding.left, padding.top);
+
+    // 绘制纯色背景
     final bgPaint = Paint()..color = bgColor;
     final bgRect = Rect.fromLTWH(0, 0, getWidth(), getHeight());
     canvas.drawRect(bgRect, bgPaint);
@@ -310,22 +319,8 @@ class ImageEditorPainterController with ChangeNotifier {
     // textPainter.paint(canvas, titleOffset);
 
     for (var item in items) {
-      final itemWidth = item.itemWidth.toDouble();
-      final itemHeight = item.itemHeight.toDouble();
-      final Rect src = Rect.fromLTWH(0, 0, itemWidth, itemHeight);
-      late final Rect dest;
-      if (isHorizontal) {
-        final thisScale = itemHeight / maxHeight;
-        final dw = itemWidth / thisScale;
-        dest = Rect.fromLTWH(currLeft, currTop, dw, maxHeight);
-        currLeft += dw + spacing;
-      } else {
-        final thisScale = itemWidth / maxWidth;
-        final dh = itemHeight / thisScale;
-        dest = Rect.fromLTWH(currLeft, currTop, maxWidth, dh);
-        currTop += dh + spacing;
-      }
-      item.drawImageRect(canvas, src, dest, Paint(), this);
+      final offset = item.draw(canvas, this, maxSize, currPos);
+      currPos.translate(offset.dx, offset.dy);
     }
   }
 
@@ -402,122 +397,5 @@ class ImageEditorPainterController with ChangeNotifier {
         );
       },
     );
-  }
-}
-
-enum JointType {
-  image,
-  title,
-}
-
-class JointItem {
-  final JointType type;
-  // image
-  ui.Image? image;
-  Uint8List? imageData;
-  String? imagePath;
-
-  // title
-  String? textStr;
-  Color? textColor;
-  double? textWidth;
-  double? textHeight;
-  double? fontSize;
-
-  final Key key = UniqueKey();
-  JointItem.image(
-      ui.Image this.image, Uint8List this.imageData, String this.imagePath)
-      : type = JointType.image;
-
-  JointItem.title(
-    String this.textStr,
-    Color this.textColor,
-    double this.textWidth,
-    double this.textHeight,
-    double this.fontSize,
-  ) : type = JointType.title;
-
-  static Future<List<JointItem>> getImages() async {
-    final picker = ImagePicker();
-    final ret = await picker.pickMultiImage();
-    List<JointItem> result = [];
-    for (var file in ret) {
-      final bytes = await file.readAsBytes();
-      final img = await ImageEditorPainter.loadImage(bytes);
-      result.add(JointItem.image(img, bytes, file.path));
-    }
-    return result;
-  }
-
-  void changeCroppedImg(CroppedFile file) async {
-    imagePath = file.path;
-    imageData = await file.readAsBytes();
-    image = await ImageEditorPainter.loadImage(imageData!);
-  }
-
-  int get itemHeight {
-    switch (type) {
-      case JointType.image:
-        return image!.height;
-      case JointType.title:
-        return textHeight!.toInt();
-    }
-  }
-
-  int get itemWidth {
-    switch (type) {
-      case JointType.image:
-        return image!.width;
-      case JointType.title:
-        return textWidth!.toInt();
-    }
-  }
-
-  void drawImageRect(
-    Canvas canvas,
-    Rect src,
-    Rect dest,
-    Paint paint,
-    ImageEditorPainterController ctrl,
-  ) {
-    if (image != null) {
-      final radius = ctrl.radius;
-      // 阴影
-      Path path = Path()
-        ..addRRect(RRect.fromLTRBAndCorners(
-          dest.left + ctrl.shadowOffset.dx / 2,
-          dest.top + ctrl.shadowOffset.dy / 2,
-          dest.right + ctrl.shadowOffset.dx / 2,
-          dest.bottom + ctrl.shadowOffset.dy / 2,
-          topLeft: radius,
-          topRight: radius,
-          bottomLeft: radius,
-          bottomRight: radius,
-        ));
-      canvas.drawShadow(path, ctrl.shadowColor, ctrl.shadowElevation, true);
-      canvas.save();
-
-      // 圆角
-      if (radius != Radius.zero) {
-        canvas.clipRRect(RRect.fromLTRBAndCorners(
-          dest.left,
-          dest.top,
-          dest.right,
-          dest.bottom,
-          topLeft: radius,
-          topRight: radius,
-          bottomLeft: radius,
-          bottomRight: radius,
-        ));
-      }
-
-      canvas.drawImageRect(image!, src, dest, paint);
-      canvas.restore();
-    }
-  }
-
-  @override
-  String toString() {
-    return 'JoinItem($type)';
   }
 }

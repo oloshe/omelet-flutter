@@ -196,33 +196,22 @@ class VM<T> with ChangeNotifier {
   }
 }
 
-class VMSelector<T> extends StatelessWidget {
-  final VM<T> model;
-  final T Function(BuildContext, VM<T>)? selector;
-  final ValueWidgetBuilder<T> builder;
+class VMSelector<T, V> extends StatelessWidget {
+  final V Function(BuildContext, VM<T>)? selector;
+  final ValueWidgetBuilder<V> builder;
   final Widget? child;
 
   const VMSelector({
     Key? key,
-    required this.model,
     required this.builder,
     this.selector,
     this.child,
   }) : super(key: key);
 
-  const VMSelector.value({
-    Key? key,
-    required VM<T> value,
-    required this.builder,
-    this.selector,
-    this.child,
-  })  : model = value,
-        super(key: key);
-
   @override
   Widget build(BuildContext context) {
-    return Selector<VM<T>, T>(
-      selector: selector ?? (context, m) => m.value,
+    return Selector<VM<T>, V>(
+      selector: selector ?? (context, m) => m.value as V,
       builder: builder,
       child: child,
     );
