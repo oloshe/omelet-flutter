@@ -37,7 +37,7 @@ class ImageEditorPainter extends CustomPainter {
 }
 
 class ImageEditorPainterController with ChangeNotifier {
-  List<JointItem2> items = [];
+  List<JointItem> items = [];
   // =====================【预设】========================
   /// 预设名字
   String presetName = 'Unnamed Preset';
@@ -75,9 +75,11 @@ class ImageEditorPainterController with ChangeNotifier {
 
   /// 最宽的图片宽度
   double _maxImgWidth = 0;
+  double get maxImgWidth => _maxImgWidth;
 
   /// 最长的图片长度
   double _maxImgHeight = 0;
+  double get maxImgHeight => _maxImgHeight;
 
   /// 缩放，0.5就是把像素缩小一倍
   double get scale => ImageJointSettingData.instance.pixelScale;
@@ -161,9 +163,15 @@ class ImageEditorPainterController with ChangeNotifier {
       return _maxImgHeight + padding.top + padding.bottom;
     } else {
       final dw = getWidth() - padding.left - padding.right;
-      final totalHeight = items.map((e) {
-        final thisScale = e.getWidth() / dw;
-        return e.getHeight() / thisScale;
+      final totalHeight = items.map((item) {
+        if (item is JointImage) {
+          final thisScale = item.getWidth() / dw;
+          return item.getHeight() / thisScale;
+        } else if (item is JointText) {
+          return item.getHeight();
+        } else {
+          return 0;
+        }
       }).reduce((a, b) => a + b);
       return totalHeight + totalSpacing + padding.top + padding.bottom;
     }
@@ -193,11 +201,11 @@ class ImageEditorPainterController with ChangeNotifier {
 
   /// 添加一张图片
   void appendImage() async {
-    items.addAll(await Joint2Image.getImages());
+    items.addAll(await JointImage.getImages());
     updateImagesChange();
   }
 
-  void appendTextItem(Joint2Text data) async {
+  void appendTextItem(JointText data) async {
     assert(data.type == JointType.text);
     items.add(data);
     updateImagesChange();
@@ -250,7 +258,7 @@ class ImageEditorPainterController with ChangeNotifier {
     notifyListeners();
   }
 
-  void applyNewList(List<JointItem2> newList) {
+  void applyNewList(List<JointItem> newList) {
     items = newList;
     updateImagesChange();
   }
@@ -288,39 +296,12 @@ class ImageEditorPainterController with ChangeNotifier {
 
     // 绘制纯色背景
     final bgPaint = Paint()..color = bgColor;
-    final bgRect = Rect.fromLTWH(0, 0, getWidth(), getHeight());
+    final bgRect = Rect.fromLTWH(0, 0, viewportWidth, viewportHeight);
     canvas.drawRect(bgRect, bgPaint);
-
-    // final textSpan = TextSpan(
-    //   text: title,
-    //   style: GoogleFonts.maShanZheng(
-    //     textStyle: const TextStyle(
-    //       fontSize: 300,
-    //       color: Colors.black,
-    //       height: 1,
-    //     ),
-    //   ),
-    // );
-    // final textPainter = TextPainter(
-    //   text: textSpan,
-    //   textDirection: TextDirection.ltr,
-    //   textAlign: TextAlign.center,
-    // );
-    // textPainter.layout(
-    //   maxWidth: viewportWidth,
-    // );
-    // Offset titleOffset;
-    // if (isHorizontal) {
-    //   titleOffset = Offset(currLeft, (viewportHeight - textPainter.height) / 2);
-    //   currLeft += textPainter.width + spacing;
-    // } else {
-    //   titleOffset = Offset((viewportWidth - textPainter.width) / 2, 100);
-    // }
-    // textPainter.paint(canvas, titleOffset);
 
     for (var item in items) {
       final offset = item.draw(canvas, this, maxSize, currPos);
-      currPos.translate(offset.dx, offset.dy);
+      currPos = currPos.translate(offset.dx, offset.dy);
     }
   }
 

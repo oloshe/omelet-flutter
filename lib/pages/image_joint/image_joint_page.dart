@@ -509,11 +509,12 @@ class _ImageJointPageState extends State<ImageJointPage> {
     BuildContext context,
     ImageEditorPainterController controller,
   ) async {
-    final data = await showDialog<Joint2Text>(
+    final data = await showDialog<JointText>(
       context: context,
-      builder: (_) => const TextItemEditor(),
+      builder: (_) => TextItemEditor(controller: controller),
     );
     if (data != null) {
+      data.applyFontSize(controller.maxImgWidth);
       controller.appendTextItem(data);
     }
   }

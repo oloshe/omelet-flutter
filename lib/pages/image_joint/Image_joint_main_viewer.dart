@@ -70,7 +70,7 @@ class ImageJointMainViewer extends StatelessWidget {
                       return scaleW;
                     }
                   })();
-                  logger.i("scale $scale");
+                  // logger.i("scale $scale");
                   return Transform.scale(
                     scale: scale,
                     origin: Offset.zero,
