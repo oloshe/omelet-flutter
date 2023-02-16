@@ -5,6 +5,7 @@ import 'package:omelet/common/index.dart';
 
 import 'package:omelet/pages/image_joint/image_editor_painter.dart';
 import 'package:omelet/pages/image_joint/joint_item.dart';
+import 'package:omelet/pages/image_joint/text_item_editor.dart';
 import 'package:omelet/widgets/cell.dart';
 import 'package:reorderables/reorderables.dart';
 
@@ -95,6 +96,8 @@ class _ImagesEditPageState extends State<ImagesEditPage> {
               title: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  item.titleWidget(),
+                  const SizedBox(height: 10),
                   Text(
                     '${item.getWidth()} X ${item.getHeight()}',
                     style: Ts.s10,
@@ -107,7 +110,7 @@ class _ImagesEditPageState extends State<ImagesEditPage> {
                     IconButton(
                       onPressed: () async {
                         final croppedFile =
-                            await Utils.cropImage(item.imagePath!);
+                            await Utils.cropImage(item.imagePath);
                         if (croppedFile != null) {
                           setState(() {
                             item.changeCroppedImg(croppedFile);
@@ -121,21 +124,32 @@ class _ImagesEditPageState extends State<ImagesEditPage> {
                 ],
               ),
               onTap: () async {
-                await _previewImage(
-                  context,
-                  items.whereType<JointImage>().toList(growable: false),
-                  index,
-                  onDeleted: () {
-                    setState(() {
-                      items.removeAt(index);
-                    });
-                    Utils.toast('Deleted');
-                  },
-                  onEdited: (_) {
-                    setState(() {});
-                    widget.controller.updateImagesChange();
-                  },
-                );
+                if (item is JointText) {
+                  await showDialog<JointText>(
+                    context: context,
+                    builder: (_) => TextItemEditor(
+                      controller: widget.controller,
+                      itemValue: item,
+                    ),
+                  );
+                  setState(() {});
+                } else if (item is JointImage) {
+                  await _previewImage(
+                    context,
+                    items.whereType<JointImage>().toList(growable: false),
+                    item,
+                    onDeleted: () {
+                      setState(() {
+                        items.removeAt(index);
+                      });
+                      Utils.toast('Deleted');
+                    },
+                    onEdited: (_) {
+                      setState(() {});
+                      widget.controller.updateImagesChange();
+                    },
+                  );
+                }
               },
             );
           }),
@@ -149,14 +163,14 @@ class _ImagesEditPageState extends State<ImagesEditPage> {
 Future<void> _previewImage(
   BuildContext context,
   List<JointImage> images,
-  int initialIndex, {
+  JointImage initialItem, {
   VoidCallback? onDeleted,
   void Function(CroppedFile)? onEdited,
 }) {
   return showDialog<void>(
     context: context,
     builder: (context) {
-      var index = initialIndex;
+      var index = images.indexOf(initialItem);
       return Material(
         child: ColoredBox(
           color: Colors.black87,

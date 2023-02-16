@@ -74,12 +74,12 @@ class ImageEditorPainterController with ChangeNotifier {
   Color shadowColor = Colors.black;
 
   /// 最宽的图片宽度
-  double _maxImgWidth = 0;
-  double get maxImgWidth => _maxImgWidth;
+  double _maxItemWidth = 0;
+  double get maxItemWidth => _maxItemWidth;
 
   /// 最长的图片长度
-  double _maxImgHeight = 0;
-  double get maxImgHeight => _maxImgHeight;
+  double _maxItemHeight = 0;
+  double get maxItemHeight => _maxItemHeight;
 
   /// 缩放，0.5就是把像素缩小一倍
   double get scale => ImageJointSettingData.instance.pixelScale;
@@ -150,7 +150,7 @@ class ImageEditorPainterController with ChangeNotifier {
       }).reduce((a, b) => a + b);
       return totalWidth + totalSpacing + padding.left + padding.right;
     } else {
-      return _maxImgWidth + padding.left + padding.right;
+      return _maxItemWidth + padding.left + padding.right;
     }
   }
 
@@ -160,7 +160,7 @@ class ImageEditorPainterController with ChangeNotifier {
       return 0;
     }
     if (isHorizontal) {
-      return _maxImgHeight + padding.top + padding.bottom;
+      return _maxItemHeight + padding.top + padding.bottom;
     } else {
       final dw = getWidth() - padding.left - padding.right;
       final totalHeight = items.map((item) {
@@ -182,12 +182,15 @@ class ImageEditorPainterController with ChangeNotifier {
 
   updateImagesChange() {
     if (items.isEmpty) {
-      _maxImgWidth = 0;
-      _maxImgHeight = 0;
+      _maxItemWidth = 0;
+      _maxItemHeight = 0;
     } else {
-      _maxImgWidth = _getMaxWidth();
-      _maxImgHeight = _getMaxHeight();
+      _maxItemWidth = _getMaxWidth();
+      _maxItemHeight = _getMaxHeight();
     }
+    items.whereType<JointText>().forEach((element) {
+      element.applyFontSize(_maxItemWidth);
+    });
     notifyListeners();
   }
 
@@ -305,7 +308,7 @@ class ImageEditorPainterController with ChangeNotifier {
     }
   }
 
-  Future<Uint8List> export() async {
+  Future<Uint8List> export(int flag) async {
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
     final w = getWidth();

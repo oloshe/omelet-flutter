@@ -27,6 +27,7 @@ abstract class JointItem {
   int getWidth();
   int getHeight();
   Widget thumbnail(Size size);
+  Widget titleWidget();
   @override
   String toString() {
     return 'JoinItem($type)';
@@ -144,6 +145,15 @@ class JointImage extends JointItem {
       ),
     );
   }
+
+  @override
+  Widget titleWidget() {
+    return const SizedBox.shrink();
+    // return Text(
+    //   imagePath.split('/').last,
+    //   style: Ts.s10,
+    // );
+  }
 }
 
 class JointText extends JointItem {
@@ -151,10 +161,11 @@ class JointText extends JointItem {
   Color textColor;
   double textWidth;
   double textHeight;
-  JointTextSize fontSize;
+  JointFontSize fontSize;
   JointTextAlign textAlign;
   double _realFontSize = 0;
   TextPainter? _textPainter;
+  TextPainter? get textPainter => _textPainter;
 
   JointText({
     required this.textStr,
@@ -163,12 +174,20 @@ class JointText extends JointItem {
     required this.textHeight,
     required this.fontSize,
     required this.textAlign,
-  }) : super(JointType.text);
+  }) : super(JointType.text) {
+    _realFontSize = textWidth / 10;
+  }
 
   @override
   Offset draw(Canvas canvas, ImageEditorPainterController controller,
       Size maxSize, Offset offset) {
     final textPainter = _textPainter ?? getTextPainter();
+    offset = translateOffset(
+      offset: offset,
+      width: controller.maxItemWidth,
+      y: 0,
+      textPainter: textPainter,
+    );
     textPainter.paint(canvas, offset);
     if (controller.isHorizontal) {
       return Offset(textWidth, 0);
@@ -195,7 +214,7 @@ class JointText extends JointItem {
         size: size,
         child: Center(
           child: Text(
-            textStr,
+            'T',
             style: Ts.white | Ts.s24,
           ),
         ),
@@ -203,11 +222,30 @@ class JointText extends JointItem {
     );
   }
 
+  @override
+  Widget titleWidget() {
+    return Text(
+      textStr,
+      style: Ts.s12,
+    );
+  }
+
   /// 当最大宽度变化的时候
   /// 通常是加减图片的时候调用
-  void applyFontSize([double? maxWidth]) {
-    final width = maxWidth ?? textWidth;
-    _realFontSize = width / 10;
+  void applyFontSize(double maxWidth) {
+    final width = maxWidth != 0 ? maxWidth : textWidth;
+    logger.i('apply $width');
+    switch(fontSize) {
+      case JointFontSize.small:
+        _realFontSize = width / 20;
+        break;
+      case JointFontSize.middle:
+        _realFontSize = width / 15;
+        break;
+      case JointFontSize.large:
+        _realFontSize = width / 10;
+        break;
+    }
     final textPainter = getTextPainter(width);
     textWidth = textPainter.width;
     textHeight = textPainter.height;
@@ -219,15 +257,15 @@ class JointText extends JointItem {
       style: GoogleFonts.maShanZheng(
         textStyle: TextStyle(
           fontSize: _realFontSize,
-          color: Colors.black,
-          height: 1,
+          color: textColor,
+          height: 1.2,
         ),
       ),
     );
     final textPainter = TextPainter(
       text: textSpan,
       textDirection: TextDirection.ltr,
-      textAlign: TextAlign.center,
+      textAlign: textAlign.toTextAlign(),
     );
     textPainter.layout(
       maxWidth: width ?? textWidth,
@@ -235,14 +273,67 @@ class JointText extends JointItem {
     _textPainter = textPainter;
     return textPainter;
   }
+
+  Offset translateOffset({
+    required Offset offset,
+    required double width,
+    required double y,
+    required TextPainter textPainter,
+    EdgeInsets padding = EdgeInsets.zero,
+  }) {
+    switch (textAlign) {
+      case JointTextAlign.left:
+        offset = offset.translate(padding.left, y);
+        break;
+      case JointTextAlign.center:
+        offset = offset.translate(
+            (width - textPainter.width + padding.left) / 2, y);
+        break;
+      case JointTextAlign.right:
+        offset = offset.translate(width - textPainter.width - padding.right, y);
+        break;
+    }
+    return offset;
+  }
+
+  void drawPreview(Canvas canvas, Size size) {
+    final textSpan = TextSpan(
+      text: textStr,
+      style: GoogleFonts.maShanZheng(
+        textStyle: TextStyle(
+          fontSize: 16,
+          color: textColor,
+          height: 1,
+        ),
+      ),
+    );
+    final ta = textAlign.toTextAlign();
+    final textPainter = TextPainter(
+      text: textSpan,
+      textDirection: TextDirection.ltr,
+      textAlign: ta,
+    );
+    const padding = EdgeInsets.symmetric(horizontal: 10);
+    final width = size.width - padding.left - padding.right;
+    textPainter.layout(
+      maxWidth: width,
+    );
+    final offset = translateOffset(
+      offset: Offset(0, (size.height - textPainter.height) / 2),
+      width: width,
+      y: 0,
+      textPainter: textPainter,
+      padding: padding,
+    );
+    textPainter.paint(canvas, offset);
+  }
 }
 
-enum JointTextSize {
+enum JointFontSize {
   small,
   middle,
   large,
 }
-
 
 enum JointTextAlign {
   left,
@@ -258,10 +349,13 @@ extension JointTextSizeToString on Enum {
 
 extension JointTextAlignExt on JointTextAlign {
   TextAlign toTextAlign() {
-    switch(this) {
-      case JointTextAlign.left: return TextAlign.left;
-      case JointTextAlign.center: return TextAlign.center;
-      case JointTextAlign.right: return TextAlign.right;
+    switch (this) {
+      case JointTextAlign.left:
+        return TextAlign.left;
+      case JointTextAlign.center:
+        return TextAlign.center;
+      case JointTextAlign.right:
+        return TextAlign.right;
     }
   }
 }

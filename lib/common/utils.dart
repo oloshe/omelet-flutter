@@ -178,6 +178,38 @@ class Utils {
     );
     return complete.future;
   }
+
+  /// 选取颜色
+  static Future<Color?> showColorPicker(
+    BuildContext context,
+    Color initialColor,
+  ) {
+    Color selectColor = initialColor;
+    return showDialog<Color?>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Pick a Color!'),
+          content: SingleChildScrollView(
+            child: SlidePicker(
+              pickerColor: initialColor,
+              onColorChanged: (clr) {
+                selectColor = clr;
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(selectColor);
+              },
+              child: const Text('Got it'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
 
 class VM<T> with ChangeNotifier {
@@ -256,8 +288,7 @@ class PickerHeader extends StatelessWidget {
             child: Text(cancelText ?? "Cancel"),
           ),
           // 标题
-          if (title != null)
-            Text(title!, style: Ts.black | Ts.bold),
+          if (title != null) Text(title!, style: Ts.black | Ts.bold),
           TextButton(
             onPressed: () {
               onConfirm?.call();

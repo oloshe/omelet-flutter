@@ -206,38 +206,6 @@ class _ImageJointPageState extends State<ImageJointPage> {
     );
   }
 
-  /// 选取颜色
-  Future<Color?> pickColor(
-    BuildContext context,
-    Color initialColor,
-  ) {
-    Color selectColor = initialColor;
-    return showDialog<Color?>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Pick a color!'),
-          content: SingleChildScrollView(
-            child: SlidePicker(
-              pickerColor: initialColor,
-              onColorChanged: (clr) {
-                selectColor = clr;
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(selectColor);
-              },
-              child: const Text('Got it'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   /// 显示重牌页面
   void showReorderPage(
     BuildContext context,
@@ -370,7 +338,7 @@ class _ImageJointPageState extends State<ImageJointPage> {
     if (!status.isGranted) {
       await Permission.storage.request();
     }
-    print(123);
+    Fluttertoast.showToast(msg: 'Start Saving...');
     // await compute(computeSave, controller);
     await computeSave(controller);
     Fluttertoast.showToast(msg: 'Saved');
@@ -380,7 +348,7 @@ class _ImageJointPageState extends State<ImageJointPage> {
       ImageEditorPainterController controller) async {
     final stopwatch0 = Stopwatch()..start();
     final stopwatch = Stopwatch()..start();
-    final bytes = await controller.export();
+    final bytes = await compute(controller.export, 0);
     print('painted ${stopwatch.elapsed}');
     final image = img.decodeImage(bytes)!;
     final file = await ImageJointSettingData.instance.encodeFile(image);
@@ -444,7 +412,7 @@ class _ImageJointPageState extends State<ImageJointPage> {
                       child: TextButton(
                         onPressed: () async {
                           final newColor =
-                              await pickColor(context, shadowColor);
+                              await Utils.showColorPicker(context, shadowColor);
                           if (newColor != null) {
                             controller.setShadowColor(newColor);
                             setState(() {
@@ -475,7 +443,7 @@ class _ImageJointPageState extends State<ImageJointPage> {
                       width: double.infinity,
                       child: TextButton(
                         onPressed: () async {
-                          final newColor = await pickColor(context, bgColor);
+                          final newColor = await Utils.showColorPicker(context, bgColor);
                           if (newColor != null) {
                             controller.setBgColor(newColor);
                             setState(() {
@@ -514,7 +482,6 @@ class _ImageJointPageState extends State<ImageJointPage> {
       builder: (_) => TextItemEditor(controller: controller),
     );
     if (data != null) {
-      data.applyFontSize(controller.maxImgWidth);
       controller.appendTextItem(data);
     }
   }
