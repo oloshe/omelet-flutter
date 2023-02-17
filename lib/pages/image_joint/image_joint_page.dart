@@ -147,6 +147,14 @@ class _ImageJointPageState extends State<ImageJointPage> {
                             child: Row(
                               children: [
                                 _BottomBtn(
+                                  icon: Icons.warning,
+                                  text: 'TEST',
+                                  onPressed: () {
+                                    final ret = myFunction();
+                                    logger.i("function");
+                                  },
+                                ),
+                                _BottomBtn(
                                   icon: Icons.add_rounded,
                                   text: 'APPEND',
                                   onPressed: controller.appendImage,
@@ -340,22 +348,9 @@ class _ImageJointPageState extends State<ImageJointPage> {
     }
     Fluttertoast.showToast(msg: 'Start Saving...');
     // await compute(computeSave, controller);
-    await computeSave(controller);
+    // await computeSave(controller);
+    await controller.export();
     Fluttertoast.showToast(msg: 'Saved');
-  }
-
-  static Future<void> computeSave(
-      ImageEditorPainterController controller) async {
-    final stopwatch0 = Stopwatch()..start();
-    final stopwatch = Stopwatch()..start();
-    final bytes = await compute(controller.export, 0);
-    print('painted ${stopwatch.elapsed}');
-    final image = img.decodeImage(bytes)!;
-    final file = await ImageJointSettingData.instance.encodeFile(image);
-    if (file != null) {
-      await ImageGallerySaver.saveFile(file.path);
-      print('total use ${stopwatch0.elapsed}');
-    }
   }
 
   // 显示切换背景
@@ -443,7 +438,8 @@ class _ImageJointPageState extends State<ImageJointPage> {
                       width: double.infinity,
                       child: TextButton(
                         onPressed: () async {
-                          final newColor = await Utils.showColorPicker(context, bgColor);
+                          final newColor =
+                              await Utils.showColorPicker(context, bgColor);
                           if (newColor != null) {
                             controller.setBgColor(newColor);
                             setState(() {

@@ -9,8 +9,11 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:visual_console/visual_console.dart';
+import 'dart:ffi' as ffi;
+import 'dart:io' show Platform;
 
-part './ts.dart';
-part './media_query.dart';
-part './utils.dart';
+part 'ts.dart';
+part 'media_query.dart';
+part 'utils.dart';
 part 'log.dart';
+part 'ffi.dart';

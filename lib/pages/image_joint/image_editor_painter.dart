@@ -1,17 +1,19 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:isolate';
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:image_cropper/image_cropper.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:omelet/common/index.dart';
 import 'package:omelet/pages/image_joint/image_joint_settings_page.dart';
 import 'package:omelet/pages/image_joint/joint_item.dart';
+import 'package:tuple/tuple.dart';
 
 class ImageEditorPainter extends CustomPainter {
   ImageEditorPainterController controller;
@@ -308,18 +310,40 @@ class ImageEditorPainterController with ChangeNotifier {
     }
   }
 
-  Future<Uint8List> export(int flag) async {
-    final recorder = ui.PictureRecorder();
-    final canvas = Canvas(recorder);
-    final w = getWidth();
-    final h = getHeight();
-    paint(canvas, ui.Size(w, h));
-    final pic = recorder.endRecording();
-    final img = await pic.toImage(w.toInt(), h.toInt());
-    final stopwatch3 = Stopwatch()..start();
-    final pngBytes = await img.toByteData(format: ui.ImageByteFormat.png);
-    print("toByteData ${stopwatch3.elapsed}");
-    return Uint8List.view(pngBytes!.buffer);
+  Future<void> export() async {
+    await Utils.stopwatchExec('export', () async {
+      final recorder = ui.PictureRecorder();
+      final canvas = Canvas(recorder);
+      final w = getWidth();
+      final h = getHeight();
+      paint(canvas, ui.Size(w, h));
+      final pic = recorder.endRecording();
+      final width = w.toInt();
+      final height = h.toInt();
+      final img = await pic.toImage(width, height);
+
+      final byteData = await Utils.stopwatchExec(
+        'toByteData',
+        () => img.toByteData(format: ui.ImageByteFormat.rawRgba),
+      );
+
+      final Uint8List rgbaBytes = byteData!.buffer.asUint8List();
+
+      logger.i("${rgbaBytes.length}");
+      final compressedBytes = await FlutterImageCompress.compressWithList(
+        rgbaBytes,
+        minHeight: height,
+        minWidth: width,
+        quality: 70,
+        format: CompressFormat.png,
+      );
+
+      final file = await ImageJointSettingData.instance
+          .encodeFile(compressedBytes, width, height);
+      if (file != null) {
+        await ImageGallerySaver.saveFile(file.path);
+      }
+    });
   }
 
   void saveSetting(BuildContext context) {
@@ -382,4 +406,19 @@ class ImageEditorPainterController with ChangeNotifier {
       },
     );
   }
+}
+
+class Tile {
+  final Picture pic;
+  final int x;
+  final int y;
+  final int width;
+  final int height;
+  const Tile({
+    required this.pic,
+    required this.x,
+    required this.y,
+    required this.width,
+    required this.height,
+  });
 }

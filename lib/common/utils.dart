@@ -210,6 +210,17 @@ class Utils {
       },
     );
   }
+
+  static Future<T> stopwatchExec<T>(
+    String name,
+    FutureOr<T> Function() func,
+  ) async {
+    final stopwatch = Stopwatch()..start();
+    final result = await func();
+    final ms = stopwatch.elapsed.inMilliseconds;
+    logger.i("$name use ${ms}ms");
+    return result;
+  }
 }
 
 class VM<T> with ChangeNotifier {

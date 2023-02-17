@@ -1,6 +1,8 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:omelet/common/index.dart';
 import 'package:omelet/widgets/cell.dart';
 import 'package:path_provider/path_provider.dart';
@@ -186,29 +188,40 @@ class ImageJointSettingData with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<File?> encodeFile(img.Image image) async {
+  Future<File?> encodeFile(Uint8List compressedBytes, int width, int height) async {
     final dir = (await getTemporaryDirectory()).path;
     final name = DateTime.now().millisecond;
     final file = File('$dir/$name.$fileType');
-    late List<int> bytes;
-    switch (fileType) {
-      case 'jpg':
-        bytes = img.encodeJpg(
-          image,
-          quality: ImageJointSettingData.instance.quality,
-        );
-        break;
-      case 'png':
-        bytes = img.encodePng(
-          image,
-          singleFrame: true,
-          level: level, // BEST_SPEED
-        );
-        break;
-      default:
-        return null;
-    }
-    file.writeAsBytes(bytes);
+    await file.writeAsBytes(compressedBytes);
     return file;
+    // final image = img.Image.fromBytes(
+    //   width: width,
+    //   height: height,
+    //   bytes: imageData.buffer,
+    // );
+    // final image = img.Image.fromBytes(
+    //     width: width, height: height, bytes: imageData.buffer);
+    // late List<int> bytes;
+    // final stopwatch = Stopwatch()..start();
+    // switch (fileType) {
+    //   case 'jpg':
+    //     bytes = img.encodeJpg(
+    //       image,
+    //       quality: ImageJointSettingData.instance.quality,
+    //     );
+    //     break;
+    //   case 'png':
+    //     bytes = img.encodePng(
+    //       image,
+    //       singleFrame: true,
+    //       level: level,
+    //     );
+    //     break;
+    //   default:
+    //     return null;
+    // }
+    // logger.w('encode: ${stopwatch.elapsed.inSeconds}s');
+    // await file.writeAsBytes(bytes);
+    // return file;
   }
 }
